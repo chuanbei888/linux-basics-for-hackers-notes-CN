@@ -1,249 +1,149 @@
-# Linux Basics for Hackers
-## Module 12 - Using & Abusing Services
+# 黑客 Linux 基础
+## 模块 12：服务的使用与滥用
 
 ---
 
-## Overview
+## 概述
 
-Services are programs that run in the background continuously, waiting to do something - serve a web page, accept a database query, answer an SSH connection. They're the working parts of a server. Understanding them matters both for setting up your own tools and for understanding what's running on a target machine and how to get in through it.
+服务是在后台持续运行、等待提供功能的程序，例如网页、数据库查询或 SSH 连接。理解服务既有助于搭建自己的工具，也有助于识别目标机器上运行的内容和潜在入口。所有测试必须针对自己的设备或已获书面授权的系统。
 
----
+## 什么是服务
 
-## What a service actually is
+服务也叫守护进程（daemon），通常在启动时运行并持续在后台监听某个网络端口。
 
-A service (also called a daemon) is a process that starts at boot and keeps running indefinitely in the background. It doesn't have a window or a visible interface. It just sits there listening for requests on a specific network port, and responds when something connects to it.
+- Apache 监听 80（HTTP）和 443（HTTPS）并提供网页
+- SSH 监听 22，接受远程终端连接
+- MySQL 监听 3306，处理数据库查询
+- PostgreSQL 监听 5432
 
-Examples:
-- Apache listens on port 80 (HTTP) and 443 (HTTPS) - serves web pages
-- SSH listens on port 22 - accepts remote terminal connections
-- MySQL listens on port 3306 - answers database queries
-- PostgreSQL listens on port 5432 - same idea, different database
+端口号帮助你判断远程连接对应的服务；nmap 扫描时，每个开放端口都代表一个服务。
 
-The port number is how you know which service you're talking to when you connect to a remote machine. This becomes very important later when you're doing port scanning with nmap - each open port is a service, and each service is a potential way in.
+![服务器后台服务](assets/background_services_diagram_1789213348325.jpg)
 
-![Background Services on Server](assets/background_services_diagram_1789213348325.jpg)
+## 启动和停止服务
 
----
-
-## Starting and stopping services
-
-There are two tools for managing services: `service` (the older way) and `systemctl` (the modern standard). Both work in Kali. `systemctl` is what you'll see most on current systems.
-
-**Using service:**
+`service` 是旧式工具，`systemctl` 是现代标准，两者在 Kali 中都可用：
 
 ```bash
 ahegazy0@kali:~$ service apache2 start
 ahegazy0@kali:~$ service apache2 stop
 ahegazy0@kali:~$ service apache2 restart
 ahegazy0@kali:~$ service apache2 status
-```
 
-**Using systemctl:**
-
-```bash
 ahegazy0@kali:~$ systemctl start apache2
 ahegazy0@kali:~$ systemctl stop apache2
 ahegazy0@kali:~$ systemctl restart apache2
 ahegazy0@kali:~$ systemctl status apache2
-```
-
-They do the same thing. `systemctl` gives you more detailed status output and is the direction things have moved, so it's worth learning both but defaulting to `systemctl`.
-
-**Enable a service to start automatically at boot:**
-
-```bash
 ahegazy0@kali:~$ systemctl enable apache2
-```
-
-**Disable auto-start:**
-
-```bash
 ahegazy0@kali:~$ systemctl disable apache2
 ```
 
----
+`enable` 让服务开机自动启动，`disable` 取消自动启动。
 
-## Apache - the web server
-
-Apache is one of the most widely used web servers in the world. Starting it turns your machine into a web server.
+## Apache：Web 服务器
 
 ```bash
 ahegazy0@kali:~$ service apache2 start
-```
-
-Once it's running, open a browser and go to `http://localhost`. You'll see the default Apache page. That page is just a file sitting at `/var/www/html/index.html`. Replace it with your own content and that's what gets served.
-
-```bash
 ahegazy0@kali:~$ echo "<h1>My custom page</h1>" > /var/www/html/index.html
 ```
 
-Refresh the browser - your content is now being served.
+启动后访问 `http://localhost`，默认页面位于 `/var/www/html/index.html`。Apache 日志保存在 `/var/log/apache2/`，访问日志记录连接者和请求内容，错误日志记录故障。
 
-Apache logs everything: every request, every IP that connected, every file that was requested. Those logs are in `/var/log/apache2/`. The access log shows who connected and what they asked for. The error log shows what broke.
+未打补丁或配置不当的 Web 服务器可能成为入口。看到 80 或 443 端口开放时，需要确认 Web 服务器及版本，并在授权范围内检查已知漏洞。
 
-**Why this matters for hacking:** Apache has had many vulnerabilities over the years. An unpatched or misconfigured Apache server is a common entry point. When you scan a target and see port 80 or 443 open, Apache (or nginx, or another web server) is almost certainly behind it. The version number matters - older versions have known exploits.
+## SSH：远程终端访问
 
----
-
-## SSH - remote terminal access
-
-SSH (Secure Shell) lets you control another computer's terminal over the network, encrypted. It's the standard way to administer remote Linux systems.
+SSH 允许通过加密网络连接控制另一台电脑：
 
 ```bash
 ahegazy0@kali:~$ ssh username@192.168.1.50
-```
-
-This opens an interactive terminal session on the machine at that IP, logged in as `username`. Everything you type is encrypted in transit.
-
-**Starting the SSH service on your machine** (so others can connect to you):
-
-```bash
 ahegazy0@kali:~$ service ssh start
-```
-
-**Connecting with a specific port** (if the server isn't on the default port 22):
-
-```bash
 ahegazy0@kali:~$ ssh -p 2222 username@192.168.1.50
-```
-
-**Copying files over SSH with scp:**
-
-```bash
 ahegazy0@kali:~$ scp file.txt username@192.168.1.50:/home/username/
 ```
 
-This copies `file.txt` to the remote machine. Works in both directions - you can pull files from a remote machine the same way.
+弱密码或默认凭据是常见风险。启用 SSH 后应立即修改默认密码，并配置密钥认证、限速和 fail2ban。
 
-**Why this matters for hacking:** SSH is everywhere. If you get valid credentials on a machine with SSH running, you have full remote access to it. Weak passwords on SSH accounts are one of the most common ways servers get compromised. Tools like Hydra can brute-force SSH login if the server doesn't have rate limiting or fail2ban configured.
+## MySQL：数据库
 
-Kali ships with a default password on the SSH service. Change it immediately if you enable it. Running Kali with default credentials and SSH open is a serious mistake.
-
----
-
-## MySQL - the database
-
-MySQL is a relational database server. It stores data in tables and answers queries written in SQL. It's behind the majority of web applications - login systems, user data, product listings, everything.
-
-**Starting MySQL:**
+MySQL 使用表和 SQL 查询存储 Web 应用数据：
 
 ```bash
 ahegazy0@kali:~$ service mysql start
-```
-
-**Logging into the MySQL shell:**
-
-```bash
 ahegazy0@kali:~$ mysql -u root -p
 ```
 
-`-u root` means log in as the root database user. `-p` means prompt for a password. Once you're in, you get a MySQL prompt:
+进入提示符后，可执行：
 
 ```sql
-mysql>
+SHOW DATABASES;           -- 列出数据库
+USE database_name;        -- 切换数据库
+SHOW TABLES;              -- 列出表
+SELECT * FROM users;      -- 查询 users 表
 ```
 
-Basic SQL to know from here:
-
-```sql
-SHOW DATABASES;           -- list all databases
-USE database_name;        -- switch to a database
-SHOW TABLES;              -- list tables in the current database
-SELECT * FROM users;      -- dump everything from the users table
-```
-
-**Why this matters for hacking:** SQL injection is one of the most common web vulnerabilities. If a web application doesn't properly sanitize input, you can inject SQL commands through a login form or URL and extract data from the database directly. Even without SQL injection, finding a MySQL server with a weak or default root password gives you access to everything stored in it - usernames, password hashes, email addresses, private data.
-
----
+Web 应用若未正确处理输入，可能受到 SQL 注入；数据库弱密码也会直接暴露用户数据。只应在授权测试中验证这些问题。
 
 ## PostgreSQL
 
-PostgreSQL is another database server, similar to MySQL. The reason it's worth mentioning here specifically is that **Metasploit** - the main exploitation framework you'll use later in this course - uses PostgreSQL as its backend to store scan results and session data.
+Metasploit 使用 PostgreSQL 保存扫描结果和会话数据：
 
 ```bash
 ahegazy0@kali:~$ service postgresql start
 ```
 
-You won't interact with it directly much. Just know that when you start Metasploit, it'll tell you the database isn't connected if PostgreSQL isn't running first.
+启动 Metasploit 前若数据库未运行，通常会提示数据库未连接。
 
----
-
-## Checking what services are running
-
-To see all services currently active on your system:
+## 查看正在运行的服务
 
 ```bash
 ahegazy0@kali:~$ systemctl list-units --type=service --state=running
-```
-
-To see which ports are currently open and what's listening on them:
-
-```bash
 ahegazy0@kali:~$ ss -tlnp
-```
-
-Or the older equivalent:
-
-```bash
 ahegazy0@kali:~$ netstat -tlnp
 ```
 
-Output shows you the port number, the protocol, and which process is listening. This is useful both for your own machine (knowing what you're exposing) and on a target (if you have access to the machine and want to see what services are running internally).
+输出会显示端口、协议和监听进程。检查自己的机器可以了解暴露面，检查目标则必须拥有相应授权。
+
+## 默认凭据是现实风险
+
+路由器、摄像头、数据库和服务器经常保留安装时的默认密码，例如 `admin/admin`、`root/root`。大量真实入侵不是依靠零日漏洞，而是因为默认凭据未被修改。部署服务后应立即更换默认凭据；授权评估时，检查默认凭据也是常见的早期步骤。
 
 ---
 
-## Default credentials - a real problem
+## 命令速查
 
-Kali Linux ships with default passwords for several services. So do many routers, cameras, databases, and servers by default. "Admin/admin", "root/root", "admin/password" - these are credentials that never got changed after installation.
-
-A huge portion of real-world breaches happen this way. Not through clever exploits or zero-days - through someone just trying the default username and password and getting in.
-
-When you set up any service, change the default credentials immediately. When you're assessing a target, trying default credentials is always one of the first steps.
-
----
-
-## Command Reference
-
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `service name start/stop/restart` | Manage a service (older syntax) |
-| `systemctl start/stop/restart name` | Manage a service (modern syntax) |
-| `systemctl status name` | Check if a service is running |
-| `systemctl enable name` | Start service automatically at boot |
-| `systemctl disable name` | Disable auto-start |
-| `systemctl list-units --type=service` | List all running services |
-| `ssh user@ip` | Connect to a remote machine via SSH |
-| `scp file user@ip:/path` | Copy a file to a remote machine |
-| `mysql -u root -p` | Log into MySQL shell |
-| `ss -tlnp` | Show open ports and listening services |
+| `service name start/stop/restart` | 使用旧式语法管理服务 |
+| `systemctl start/stop/restart name` | 使用现代语法管理服务 |
+| `systemctl status name` | 查看服务状态 |
+| `systemctl enable name` | 设置开机自动启动 |
+| `systemctl disable name` | 取消开机自动启动 |
+| `systemctl list-units --type=service` | 列出服务 |
+| `ssh user@ip` | 通过 SSH 连接远程机器 |
+| `scp file user@ip:/path` | 复制文件到远程机器 |
+| `mysql -u root -p` | 登录 MySQL |
+| `ss -tlnp` | 查看开放端口和监听服务 |
 
+| 服务 | 默认端口 | 作用 |
+|---|---:|---|
+| SSH | 22 | 远程终端 |
+| HTTP（Apache） | 80 | Web 服务器 |
+| HTTPS | 443 | 加密 Web 服务器 |
+| MySQL | 3306 | 数据库 |
+| PostgreSQL | 5432 | 数据库 |
+| FTP | 21 | 文件传输 |
+| SMTP | 25 | 发送邮件 |
+
+## 练习
+
+- [ ] 在自己的实验机上启动 Apache，访问 `http://localhost`
+- [ ] 修改 `/var/www/html/index.html` 并刷新页面
+- [ ] 启动 MySQL，使用 `mysql -u root -p` 登录并运行 `SHOW DATABASES;`
+- [ ] 运行 `ss -tlnp`，观察这些服务打开的端口
+- [ ] 完成后停止不再需要的服务
+
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-## Key services and their ports
-
-| Service | Default port | What it does |
-|---|---|---|
-| SSH | 22 | Remote terminal access |
-| HTTP (Apache) | 80 | Web server |
-| HTTPS | 443 | Web server (encrypted) |
-| MySQL | 3306 | Database |
-| PostgreSQL | 5432 | Database |
-| FTP | 21 | File transfer |
-| SMTP | 25 | Email sending |
-
-Memorizing these is worth doing. When nmap returns a list of open ports, knowing what's normally on each port tells you immediately what services you're looking at.
-
----
-
-## Practice
-
-- [ ] Start Apache with `service apache2 start`, then open a browser and go to `http://localhost`
-- [ ] Replace the content of `/var/www/html/index.html` with something custom and refresh the browser
-- [ ] Start MySQL and log in with `mysql -u root -p`, then run `SHOW DATABASES;`
-- [ ] Run `ss -tlnp` and see which ports are open after starting those services
-- [ ] Stop both services when you're done - don't leave things running you don't need
-
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
----
-
-*Up next: Module 13 - Becoming Secure & Anonymous*
+*下一篇：模块 13——安全与匿名性*

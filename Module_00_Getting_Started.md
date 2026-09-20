@@ -1,120 +1,120 @@
-# Linux Basics for Hackers
-## Module 0 - Getting Started & Setting Up Your Lab
+# 黑客 Linux 基础
+## 模块 0：开始学习与搭建实验环境
 
 ---
 
-## Overview
+## 概述
 
-Before anything else, you need somewhere safe to practice. You don't want to break your actual computer while learning. This module is about setting up that safe space - a virtual machine running Kali Linux - and understanding why Linux is the go-to OS for hackers in the first place.
-
----
-
-## Why Linux?
-
-Windows hides a lot from you. Most things happen behind the scenes and you're not supposed to care about them. Linux is the opposite - everything is visible, everything is configurable, and nothing is locked away.
-
-Two things make Linux special for hacking:
-
-- **Open source** - the entire source code is public. You can read it, change it, rebuild it. Nothing is a black box.
-- **Transparent** - you can see exactly what the system is doing at any moment. No hidden processes you can't inspect.
-
-Think of Windows like a car where the hood is welded shut. You can drive it fine, but you can't touch the engine. Linux is the same car with the hood always open and every tool laid out on the table.
+在开始之前，你需要一个安全的练习场所。学习时不应该把自己的真实电脑弄坏。本模块将带你搭建这个安全环境：运行 Kali Linux 的虚拟机，并了解 Linux 为什么会成为黑客首选的操作系统。
 
 ---
 
-## What is Kali Linux?
+## 为什么选择 Linux？
 
-Linux comes in many versions called **distributions** (or "distros"). Ubuntu, Fedora, Mint - these are all Linux, just packaged differently for different purposes.
+Windows 对用户隐藏了很多细节。大多数事情都在后台发生，用户通常不需要关心。Linux 则相反：一切都可见、一切都可配置，没有什么会被锁在黑盒里。
 
-Kali Linux is a distro built specifically for security professionals. It comes pre-loaded with hundreds of hacking and penetration testing tools so you don't have to hunt them down and install them one by one. It's built on top of **Debian**, which is one of the oldest and most stable Linux distributions out there.
+Linux 适合黑客工作的原因主要有两点：
 
-Kali is the industry standard. It's what professionals use, so it's what we'll use.
+- **开源**：完整源代码公开可见。你可以阅读、修改并重新构建它，没有黑盒。
+- **透明**：你可以随时准确看到系统正在做什么，不会有无法检查的隐藏进程。
+
+可以把 Windows 想成一辆引擎盖被焊死的汽车。你能正常驾驶，但无法碰到发动机。Linux 则像同一辆引擎盖一直打开、所有工具都摆在桌面上的汽车。
 
 ---
 
-## The Virtual Machine
+## 什么是 Kali Linux？
 
-A Virtual Machine (VM) is a computer running inside your computer. It takes a slice of your hardware - some RAM, some CPU - and uses it to run a completely separate operating system in its own window.
+Linux 有许多被称为**发行版**（简称 distro）的版本。Ubuntu、Fedora、Mint 都是 Linux，只是针对不同用途以不同方式打包。
+
+Kali Linux 是专门为安全从业者构建的发行版。它预装了数百种黑客和渗透测试工具，因此你不必逐个寻找和安装。Kali 构建于 **Debian** 之上，Debian 是现存最古老、最稳定的 Linux 发行版之一。
+
+Kali 是行业标准，也是专业人士使用的系统，所以我们也会使用它。
+
+---
+
+## 虚拟机
+
+虚拟机（Virtual Machine，VM）是在你的电脑里运行的另一台电脑。它从你的硬件中划分出一部分内存和 CPU，用一个独立窗口运行完全分离的操作系统。
 
 ```
-Your real computer (Windows or macOS)
+你的真实电脑（Windows 或 macOS）
 └── VirtualBox
-    └── Kali Linux VM  ← this is where you practice
+    └── Kali Linux 虚拟机  ← 你在这里练习
 ```
 
-Your real computer is called the **host**. The VM is called the **guest**. Whatever happens inside the guest stays inside the guest. If you break something, you reset the VM and it's gone. Your host machine never even notices.
+你的真实电脑叫作**主机**（host），虚拟机叫作**客户机**（guest）。客户机里发生的一切都留在客户机里。如果你弄坏了什么，只需重置虚拟机，问题就消失了，主机甚至不会察觉。
 
-This is why professionals always test exploits inside VMs first. If you accidentally run something destructive, the VM takes the hit, not your real system.
-
----
-
-## VirtualBox and the ISO file
-
-**VirtualBox** is the free software you use to create and run VMs. It's made by Oracle and works on Windows, macOS, and Linux.
-
-**An ISO file** is a disk image - a complete copy of an operating system packaged into one file. When you download Kali Linux, what you're downloading is an ISO. VirtualBox uses that ISO to install Kali inside your VM, the same way you'd install an OS from a physical disc.
+这就是专业人士总是在虚拟机中先测试漏洞利用的原因。如果不小心运行了具有破坏性的操作，承担后果的是虚拟机，而不是你的真实系统。
 
 ---
 
-## Before you install - things to check
+## VirtualBox 与 ISO 文件
 
-**Virtualization must be enabled in BIOS.** This is the most common reason VirtualBox fails to start a VM. Your CPU supports virtualization but it's sometimes turned off by default in the BIOS settings.
+**VirtualBox** 是用来创建和运行虚拟机的免费软件，由 Oracle 制作，支持 Windows、macOS 和 Linux。
 
-- Intel CPUs call it: **Intel VT-x**
-- AMD CPUs call it: **AMD-V**
+**ISO 文件**是一种磁盘映像，也就是将完整操作系统打包在一个文件中的副本。下载 Kali Linux 时，下载的就是 ISO 文件。VirtualBox 使用它在虚拟机中安装 Kali，就像从实体光盘安装操作系统一样。
 
-To check: restart your computer and press `DEL`, `F2`, or `F12` (depends on your motherboard) to get into BIOS. Look for a virtualization option and make sure it's enabled.
+---
 
-**RAM allocation.** Don't give the VM too much RAM or your host machine will slow down badly. A simple rule - give 1 GB to the VM for every 4 GB your computer has.
+## 安装前需要检查的事项
 
-| Your total RAM | Give the VM |
+**必须在 BIOS 中启用硬件虚拟化。** 这是 VirtualBox 无法启动虚拟机的最常见原因。你的 CPU 可能支持虚拟化，但 BIOS 设置有时默认将其关闭。
+
+- Intel CPU 将其称为：**Intel VT-x**
+- AMD CPU 将其称为：**AMD-V**
+
+检查方法：重启电脑，按 `DEL`、`F2` 或 `F12`（取决于主板）进入 BIOS。找到虚拟化选项并确保它已启用。
+
+**分配内存。** 不要给虚拟机分配过多内存，否则主机会严重变慢。一个简单规则是：电脑每有 4 GB 内存，就给虚拟机分配 1 GB。
+
+| 电脑总内存 | 分配给虚拟机 |
 |---|---|
 | 4 GB | 1 GB |
 | 8 GB | 2 GB |
 | 16 GB | 4 GB |
 
-**The root password.** During installation, Kali will ask you to set a root password. Root is the all-powerful admin account - full control over everything in the system. Set something you'll remember, even if it's simple for now. You can change it later.
+**root 密码。** 安装过程中，Kali 会要求你设置 root 密码。root 是拥有系统全部控制权的管理员账户。即使暂时设置得简单一些，也要选择自己记得住的密码，之后可以再修改。
 
 ---
 
-## Setting it up
+## 搭建步骤
 
-1. Download VirtualBox from virtualbox.org and install it.
-2. Download the Kali Linux 64-bit Installer ISO from kali.org/get-kali.
-3. Open VirtualBox → click New → name it "Kali" → type: Linux → version: Debian 64-bit.
-4. Assign RAM based on the table above.
-5. Create a virtual hard disk, 20 GB minimum.
-6. Go to Settings → Storage → click the empty disc icon → attach your ISO file.
-7. Start the VM and follow the Kali installer through.
-8. Set your username and root password when asked.
+1. 从 virtualbox.org 下载并安装 VirtualBox。
+2. 从 kali.org/get-kali 下载 Kali Linux 64 位安装程序 ISO。
+3. 打开 VirtualBox → 点击“新建”→ 名称填写 `Kali` → 类型选择 Linux → 版本选择 Debian 64-bit。
+4. 根据上面的表格分配内存。
+5. 创建至少 20 GB 的虚拟硬盘。
+6. 进入“设置”→“存储”→ 点击空光盘图标 → 挂载 ISO 文件。
+7. 启动虚拟机并按照 Kali 安装程序的提示操作。
+8. 按提示设置用户名和 root 密码。
 
-You'll know it worked when you hit the Kali login screen with the dragon logo.
+当你看到带有龙标志的 Kali 登录界面时，就说明安装成功了。
 
 ---
 
-## Key Terms Reference
+## 关键术语速查
 
-| Term | What it means |
+| 术语 | 含义 |
 |---|---|
-| Open Source | The code is public - anyone can read or modify it |
-| Distribution (distro) | A version of Linux packaged for a specific purpose |
-| Debian | The stable Linux base that Kali is built on |
-| Virtual Machine (VM) | A fake computer running inside your real one |
-| VirtualBox | The software that creates and runs VMs |
-| ISO file | A downloadable disk image used to install an OS |
-| Host | Your real, physical computer |
-| Guest | The VM running inside the host |
-| Root | The all-powerful admin user in Linux |
+| 开源（Open Source） | 代码公开，任何人都可以阅读或修改 |
+| 发行版（Distribution / distro） | 针对特定用途打包的 Linux 版本 |
+| Debian | Kali 所基于的稳定 Linux 基础系统 |
+| 虚拟机（Virtual Machine / VM） | 在真实电脑中运行的模拟电脑 |
+| VirtualBox | 创建和运行虚拟机的软件 |
+| ISO 文件 | 用于安装操作系统的可下载磁盘映像 |
+| 主机（Host） | 你的真实物理电脑 |
+| 客户机（Guest） | 在主机中运行的虚拟机 |
+| root | Linux 中拥有全部权限的管理员用户 |
 
 ---
 
-## Practice
+## 练习
 
-- [ ] Download VirtualBox and the Kali 64-bit ISO
-- [ ] Create a VM named "Kali" and get it running
-- [ ] Get to the login screen with the dragon wallpaper - that's the finish line for this module
+- [ ] 下载 VirtualBox 和 Kali 64 位 ISO
+- [ ] 创建名为 `Kali` 的虚拟机并成功运行
+- [ ] 进入带有龙壁纸的登录界面，这就是本模块的完成目标
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-*Up next: Module 1 - The Basics of the Terminal*
+*下一篇：模块 1——终端基础*

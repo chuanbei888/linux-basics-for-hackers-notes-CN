@@ -1,205 +1,143 @@
-# Linux Basics for Hackers
-## Module 3 - Managing Networks
+# 黑客 Linux 基础
+## 模块 3：网络管理
 
 ---
 
-## Overview
+## 概述
 
-Hacking almost always happens over a network. Before you can do anything on a network, you need to understand your own identity on it - your IP address, your MAC address - and how to manage both. This module covers reading your network info, changing it, and understanding the basics of how DNS works.
+黑客活动几乎总是发生在网络上。在网络中进行任何操作前，你需要了解自己的网络身份：IP 地址和 MAC 地址，并知道如何管理它们。本模块还会介绍 DNS 的基础知识。
 
-![Network Routing](assets/network_routing_diagram_1789213191969.jpg)
+![网络路由示意图](assets/network_routing_diagram_1789213191969.jpg)
 
----
+## 每台设备都有的两个地址
 
-## Two addresses every device has
+**IP 地址**是设备在网络上的逻辑地址，由路由器分配，也可以手动设置。它像街道地址，告诉网络你在哪里，但可能发生变化。
 
-Every device on a network carries two identifiers:
+**MAC 地址**由网卡制造商写入硬件，是由 12 个十六进制字符组成的硬件级标识符，每个网络接口都不同，例如 `00:1A:2B:3C:4D:5E`。它不像 IP 地址那样容易永久修改，但可以临时伪装。
 
-**IP address** - this is your logical address on the network. It's assigned by the router (or manually by you) and it's how data knows where to go. Think of it like your street address - it tells the network where you are, but it can change.
-
-**MAC address** - this is burned into the physical network card by the manufacturer. It's a hardware-level identifier, 12 hex characters, unique to every network interface in the world. It looks like this: `00:1A:2B:3C:4D:5E`. Unlike an IP address, you can't permanently change it - but you can spoof it temporarily.
-
-Understanding both is important because when you're on a network, these are what identify you. Knowing how to read and change them is a basic skill.
+理解二者很重要，因为它们共同标识了你在网络上的设备。能够读取并修改它们是基本技能。
 
 ---
 
-## Essential Commands
+## 基本命令
 
 ### ifconfig
 
-This is your main tool for reading and managing network interfaces. Run it with no arguments and it shows you everything about your current network setup.
+用于查看和管理网络接口。不带参数运行时，会显示当前网络配置：
 
 ```bash
 ahegazy0@kali:~$ ifconfig
 ```
 
-The output shows each network interface your machine has. Common ones:
+常见接口：
 
-| Interface | What it is |
+| 接口 | 含义 |
 |---|---|
-| `eth0` | Your wired Ethernet connection |
-| `wlan0` | Your wireless (Wi-Fi) connection |
-| `lo` | Loopback - the system talking to itself, always 127.0.0.1 |
+| `eth0` | 有线以太网连接 |
+| `wlan0` | 无线 Wi-Fi 连接 |
+| `lo` | 回环接口，系统与自身通信，始终为 127.0.0.1 |
 
-In the output, look for `inet` - that's your current IP address. Look for `ether` - that's your MAC address.
-
-To see a specific interface only:
+输出中的 `inet` 是当前 IP 地址，`ether` 是 MAC 地址。
 
 ```bash
 ahegazy0@kali:~$ ifconfig eth0
-```
-
-To assign a new IP address to an interface:
-
-```bash
 ahegazy0@kali:~$ ifconfig eth0 192.168.1.100
-```
-
-To also set the subnet mask at the same time:
-
-```bash
 ahegazy0@kali:~$ ifconfig eth0 192.168.1.100 netmask 255.255.255.0
-```
-
-To bring an interface up or down:
-
-```bash
 ahegazy0@kali:~$ ifconfig eth0 up
 ahegazy0@kali:~$ ifconfig eth0 down
 ```
 
-Bringing an interface down and back up is sometimes needed after making changes.
-
----
+关闭再重新启用接口，有时是应用配置变更所必需的。
 
 ### iwconfig
 
-Like `ifconfig` but specifically for wireless interfaces. Shows Wi-Fi specific info like the network name (ESSID), signal strength, and transmission rate.
+类似 `ifconfig`，但专门用于无线接口，会显示 ESSID、信号强度和传输速率等 Wi-Fi 信息：
 
 ```bash
 ahegazy0@kali:~$ iwconfig
 ```
 
-Most of the time you're just reading from this one, not writing to it. But it's useful for confirming which wireless network you're connected to and what your signal looks like.
-
----
+它主要用于查看信息，也适合确认当前连接的无线网络和信号情况。
 
 ### dhclient
 
-When you manually set an IP address with `ifconfig`, you're no longer getting one automatically from the router. If you want to go back to getting an automatic IP from the network, use `dhclient`.
+使用 `ifconfig` 手动设置 IP 后，就不会再从路由器自动获取地址。要恢复自动获取，请使用 `dhclient`：
 
 ```bash
 ahegazy0@kali:~$ dhclient eth0
+ahegazy0@kali:~$ dhclient -r eth0     释放当前 IP
+ahegazy0@kali:~$ dhclient eth0        请求新的 IP
 ```
 
-This sends a request to the network's DHCP server saying "give me an IP address" and it assigns you one. If you changed your IP manually and lost internet, this is usually what fixes it.
+如果手动修改 IP 后失去网络连接，通常运行它即可修复。
 
-You can also use this to request a fresh IP if you think your current one is causing issues:
+### 修改 MAC 地址
 
-```bash
-ahegazy0@kali:~$ dhclient -r eth0     releases your current IP
-ahegazy0@kali:~$ dhclient eth0        requests a new one
-```
-
----
-
-### Changing your MAC address
-
-MAC addresses are meant to be permanent but they're easy to spoof at the software level. The change only lasts until you reboot - after that, the real hardware MAC comes back.
-
-First bring the interface down:
+MAC 地址在硬件层面应当固定，但可以在软件层临时伪装。重启后真实 MAC 会恢复。
 
 ```bash
 ahegazy0@kali:~$ ifconfig eth0 down
-```
-
-Then set a new MAC:
-
-```bash
 ahegazy0@kali:~$ ifconfig eth0 hw ether 00:11:22:33:44:55
-```
-
-Then bring it back up:
-
-```bash
 ahegazy0@kali:~$ ifconfig eth0 up
 ```
 
-Run `ifconfig eth0` to confirm the change took. The `ether` line should now show your new MAC.
+运行 `ifconfig eth0` 确认 `ether` 行是否显示新地址。
 
-> The MAC address change only exists in memory. It doesn't survive a reboot. If you need it to persist, there are tools like `macchanger` that handle it more cleanly.
-
----
+> 这种修改只存在于内存中，不会跨越重启。需要持久化时，可以使用 `macchanger` 等工具。
 
 ### dig
 
-`dig` is for querying DNS - the system that translates domain names like `google.com` into IP addresses. It gives you more detail than just pinging a domain.
+`dig` 用于查询 DNS，即把 `google.com` 等域名转换成 IP 地址的系统。它提供的信息比简单地 ping 域名更详细：
 
 ```bash
 ahegazy0@kali:~$ dig google.com
-```
-
-The `ANSWER SECTION` in the output shows you the IP addresses that `google.com` resolves to.
-
-To find mail server records specifically:
-
-```bash
 ahegazy0@kali:~$ dig google.com mx
-```
-
-`mx` stands for Mail Exchange - this tells you which servers handle email for a domain. Useful for recon.
-
-Other record types worth knowing:
-
-| Record type | What it shows |
-|---|---|
-| `a` | IPv4 address for the domain |
-| `aaaa` | IPv6 address |
-| `mx` | Mail servers |
-| `ns` | Name servers (which DNS servers are authoritative) |
-| `txt` | Text records - often contain verification data |
-
-```bash
 ahegazy0@kali:~$ dig google.com ns
 ```
 
----
+`ANSWER SECTION` 会显示域名解析到的 IP。`mx` 代表 Mail Exchange，用于查找处理域名邮件的服务器，常用于侦察。
 
-### DNS - a quick note on why it matters
-
-DNS (Domain Name System) is the internet's address book. When you type `google.com`, your computer asks a DNS server "what's the IP for google.com?" and gets an address back. Without DNS, you'd have to remember IP addresses for every site.
-
-Hackers care about DNS for a few reasons. First, DNS queries can reveal a lot about a target's infrastructure - mail servers, subdomains, name servers. Second, DNS can be manipulated - if you can redirect DNS responses, you can send people to the wrong server entirely (this is called DNS poisoning or DNS spoofing, covered in later modules).
-
-For now, knowing how to use `dig` to read DNS records is enough.
-
----
-
-## Command Reference
-
-| Task | Command |
+| 记录类型 | 内容 |
 |---|---|
-| View all network interfaces | `ifconfig` |
-| View one interface | `ifconfig eth0` |
-| Set an IP address | `ifconfig eth0 192.168.1.100` |
-| Bring interface down/up | `ifconfig eth0 down / up` |
-| View wireless info | `iwconfig` |
-| Request IP from DHCP | `dhclient eth0` |
-| Release current IP | `dhclient -r eth0` |
-| Spoof MAC address | `ifconfig eth0 hw ether 00:11:22:33:44:55` |
-| DNS lookup | `dig google.com` |
-| Find mail servers | `dig google.com mx` |
+| `a` | 域名的 IPv4 地址 |
+| `aaaa` | IPv6 地址 |
+| `mx` | 邮件服务器 |
+| `ns` | 权威名称服务器 |
+| `txt` | 文本记录，常包含验证数据 |
+
+### DNS：为什么值得关注
+
+DNS（Domain Name System，域名系统）是互联网的地址簿。输入 `google.com` 时，电脑会询问 DNS 服务器它对应的 IP。没有 DNS，你就必须记住每个网站的 IP 地址。
+
+黑客关注 DNS 有两个原因：DNS 查询可以暴露目标的邮件服务器、子域名和名称服务器等基础设施信息；DNS 响应也可能被操纵，把用户重定向到错误的服务器，这称为 DNS 中毒或 DNS 欺骗。
 
 ---
 
-## Practice
+## 命令速查
 
-- [ ] Run `ifconfig` and find your IP address and MAC address on `eth0` or `wlan0`
-- [ ] Run `dig google.com` and read the answer section - note the IP addresses returned
-- [ ] Run `dig google.com mx` and see which servers handle Google's email
-- [ ] Try changing your IP to `192.168.1.100`, confirm it with `ifconfig`, then run `dhclient eth0` to get a fresh one from DHCP
+| 任务 | 命令 |
+|---|---|
+| 查看所有网络接口 | `ifconfig` |
+| 查看一个接口 | `ifconfig eth0` |
+| 设置 IP 地址 | `ifconfig eth0 192.168.1.100` |
+| 关闭/启用接口 | `ifconfig eth0 down / up` |
+| 查看无线信息 | `iwconfig` |
+| 从 DHCP 请求 IP | `dhclient eth0` |
+| 释放当前 IP | `dhclient -r eth0` |
+| 伪装 MAC 地址 | `ifconfig eth0 hw ether 00:11:22:33:44:55` |
+| DNS 查询 | `dig google.com` |
+| 查找邮件服务器 | `dig google.com mx` |
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
 ---
 
-*Up next: Module 4 - Software Management*
+## 练习
+
+- [ ] 运行 `ifconfig`，找出自己的 IP 和 MAC 地址
+- [ ] 运行 `iwconfig`，查看无线连接信息
+- [ ] 用 `dig google.com` 查看 DNS 响应，再用 `dig google.com mx` 查找邮件服务器
+- [ ] 在自己的实验机上关闭接口、为其设置临时 IP，然后用 `dhclient` 恢复自动配置
+
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
+---
+
+*下一篇：模块 4——软件管理*

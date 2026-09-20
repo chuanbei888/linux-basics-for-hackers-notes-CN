@@ -1,163 +1,123 @@
-# Linux Basics for Hackers
-## Module 4 - Software Management
+# 黑客 Linux 基础
+## 模块 4：软件管理
 
 ---
 
-## Overview
+## 概述
 
-Kali comes loaded with tools but you'll constantly need to add new ones, update existing ones, or pull something directly from a developer's GitHub. This module covers how Linux handles software installation - which works nothing like Windows - and how to get tools that aren't in the standard library.
+Kali 已经预装了许多工具，但你仍会经常需要添加新工具、更新现有工具，或直接从开发者的 GitHub 获取项目。本模块介绍 Linux 如何安装软件，以及如何获取标准仓库中没有的工具。
 
----
+## Linux 如何管理软件
 
-## How Linux handles software
+Windows 通常是从网站下载安装程序、双击并按向导操作。Linux 使用的是**软件仓库**：由发行版维护和验证的大型在线软件库。你只需告诉系统软件名称，它就会自动查找、下载、安装，并同时处理依赖项。
 
-On Windows, you download an installer from a website, double-click it, and click through the wizard. Linux doesn't work like that.
-
-Linux uses **repositories** - massive online libraries of software maintained and verified by the distribution. Instead of hunting for a download link, you just tell your system the name of what you want and it finds it, downloads it, and installs it automatically, including any other software it depends on to run.
-
-The tool that manages all of this on Kali (and Debian-based systems) is `apt-get`.
-
-The list of repositories your system knows about lives in a file called `sources.list` at `/etc/apt/sources.list`. You generally leave this file alone unless you know what you're adding - unofficial repositories can contain malicious packages.
+Kali（以及基于 Debian 的系统）使用 `apt-get` 管理软件。仓库地址保存在 `/etc/apt/sources.list` 中。除非清楚自己在添加什么，否则不要修改它，因为非官方仓库可能包含恶意软件包。
 
 ---
 
-## Essential Commands
+## 基本命令
 
 ### apt-get update
 
-Before installing anything, run this. It doesn't install or upgrade anything - it just refreshes your local list of what's available in the repositories. If you skip this and try to install something, you might get an old version or an error.
+安装前先运行此命令。它不会安装或升级软件，只会刷新本地可用软件包列表。跳过这一步可能安装旧版本或遇到错误。
 
 ```bash
 ahegazy0@kali:~$ apt-get update
 ```
 
-Make a habit of running this before any install.
-
----
+养成每次安装前先运行的习惯。
 
 ### apt-get install
 
-Downloads and installs a package. Kali handles dependencies automatically - if the tool needs five other libraries to run, it grabs those too.
+下载并安装软件包，Kali 会自动处理依赖：
 
 ```bash
 ahegazy0@kali:~$ apt-get install wireshark
-```
-
-It'll ask for confirmation before downloading. Type `y` and press Enter.
-
-To skip the confirmation prompt:
-
-```bash
 ahegazy0@kali:~$ apt-get install -y wireshark
 ```
 
-The `-y` flag answers yes automatically. Useful when you know what you're doing.
-
----
+`-y` 会自动确认安装。
 
 ### apt-get remove
 
-Removes an installed package.
+删除已安装的软件包。`remove` 会保留配置文件，`purge` 会连配置一起删除：
 
 ```bash
 ahegazy0@kali:~$ apt-get remove wireshark
-```
-
-This removes the program but leaves behind its configuration files. If you want to remove everything including configs:
-
-```bash
 ahegazy0@kali:~$ apt-get purge wireshark
 ```
 
----
-
 ### apt-get upgrade
 
-Updates all installed packages to their latest versions.
+将所有已安装软件包升级到最新版本：
 
 ```bash
 ahegazy0@kali:~$ apt-get upgrade
 ```
 
-Good to run periodically to keep your tools current. Always run `apt-get update` first to refresh the package list before upgrading.
-
----
+升级前始终先运行 `apt-get update`。
 
 ### apt-cache search
 
-Searches the local repository database for packages matching a keyword. Useful when you know roughly what you're looking for but not the exact package name.
+在本地仓库数据库中按关键词搜索软件包：
 
 ```bash
 ahegazy0@kali:~$ apt-cache search wifi
-```
-
-Returns a list of packages with "wifi" in their name or description. From there you pick what looks right and install it by name.
-
-```bash
 ahegazy0@kali:~$ apt-cache search wireless
 ahegazy0@kali:~$ apt-cache search password crack
 ```
 
----
-
 ### git clone
 
-A lot of the best and newest hacking tools aren't in any repository - they live on GitHub. `git clone` downloads a copy of the entire project from GitHub directly to your machine.
+许多最新的黑客工具不在软件仓库中，而是托管在 GitHub。`git clone` 会将完整项目下载到本机：
 
 ```bash
 ahegazy0@kali:~$ git clone https://github.com/username/toolname
-```
-
-This creates a folder with the tool's name in your current directory. Most tools come with a `README` file that explains how to install and run them from there.
-
-The general process after cloning:
-
-```bash
 ahegazy0@kali:~$ git clone https://github.com/example/tool
 ahegazy0@kali:~$ cd tool
 ```
 
-Then read the README for install steps - usually something like `pip install -r requirements.txt` or just running a Python script directly.
+克隆后先阅读项目的 README，通常会给出 `pip install -r requirements.txt` 或直接运行 Python 脚本等安装步骤。
 
-> Many of the most current tools only exist on GitHub. Learning `git clone` early means you're not limited to what's in the official repositories.
+> 很多最新工具只存在于 GitHub。尽早学会 `git clone`，就不会受限于官方仓库中的软件。
 
 ---
 
-## A note on sources.list
+## 关于 sources.list
 
-The file `/etc/apt/sources.list` contains the URLs of all the repositories your system pulls from. You can open it with:
+`/etc/apt/sources.list` 包含系统下载软件的仓库地址：
 
 ```bash
 ahegazy0@kali:~$ cat /etc/apt/sources.list
 ```
 
-Sometimes you'll find instructions online telling you to add a line to this file to access a third-party repository. Be careful with that. Official Kali repositories are maintained and verified. Random third-party repos are not. Adding the wrong source is an easy way to install something you didn't intend to.
+网上有时会建议你向其中添加第三方仓库。请谨慎处理：官方 Kali 仓库经过维护和验证，随机第三方仓库则不一定可靠。添加错误的软件源很容易安装不该安装的内容。
 
 ---
 
-## Command Reference
+## 命令速查
 
-| Action | Command |
+| 操作 | 命令 |
 |---|---|
-| Refresh package list | `apt-get update` |
-| Install a package | `apt-get install [name]` |
-| Install without prompt | `apt-get install -y [name]` |
-| Remove a package | `apt-get remove [name]` |
-| Remove including configs | `apt-get purge [name]` |
-| Update all packages | `apt-get upgrade` |
-| Search for a package | `apt-cache search [keyword]` |
-| Clone from GitHub | `git clone [url]` |
+| 刷新软件包列表 | `apt-get update` |
+| 安装软件包 | `apt-get install [name]` |
+| 安装时自动确认 | `apt-get install -y [name]` |
+| 删除软件包 | `apt-get remove [name]` |
+| 连同配置一起删除 | `apt-get purge [name]` |
+| 更新所有软件包 | `apt-get upgrade` |
+| 搜索软件包 | `apt-cache search [keyword]` |
+| 从 GitHub 克隆项目 | `git clone [url]` |
 
 ---
 
-## Practice
+## 练习
 
-- [ ] Run `apt-get update` to refresh your package list
-- [ ] Use `apt-cache search wifi` and look through what comes back
-- [ ] Pick one tool from the results and install it with `apt-get install`
-- [ ] Find any simple tool on GitHub and bring it to your machine with `git clone`
+- [ ] 运行 `apt-get update` 刷新软件包列表
+- [ ] 使用 `apt-cache search wifi` 查看搜索结果
+- [ ] 从结果中选一个工具，用 `apt-get install` 安装
+- [ ] 在 GitHub 找一个简单工具，使用 `git clone` 下载到本机
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-*Up next: Module 5 - Controlling File and Directory Permissions*
+*下一篇：模块 5——文件和目录权限控制*

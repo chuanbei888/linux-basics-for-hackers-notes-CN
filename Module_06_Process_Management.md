@@ -1,45 +1,40 @@
-# Linux Basics for Hackers
-## Module 6 - Process Management
+# 黑客 Linux 基础
+## 模块 6：进程管理
 
 ---
 
-## Overview
+## 概述
 
-At any given moment, your computer is running hundreds of things at once - your terminal, background services, system daemons, things you didn't even knowingly start. This module is about seeing all of that, understanding what's what, and being able to control it. That means speeding things up, moving tasks around, and killing processes that are frozen, eating resources, or just in your way.
+电脑在任何时刻都可能同时运行数百个任务：终端、后台服务、系统守护进程，以及你甚至没有主动启动的程序。本模块介绍如何查看、理解并控制这些进程，包括加快任务、切换前后台，以及结束冻结、占用资源或妨碍工作的进程。
 
----
+## 什么是进程？
 
-## What is a process?
+每次运行程序，系统都会为它创建一个**进程**。进程就是程序正在运行的实例：打开 Firefox 是一个进程，执行终端命令也是一个进程，后台无窗口运行的任务同样是进程。
 
-Every time you run a program, the system creates a **process** for it. A process is just a running instance of a program. Open Firefox - that's a process. Run a terminal command - that's a process. Even things running silently in the background with no visible window are processes.
+每个进程启动时都会获得一个唯一编号，称为 **PID（Process ID，进程 ID）**。系统和你都用它识别特定任务。想停止进程，就需要它的 PID。
 
-The key thing to understand is that every process gets a unique number assigned to it the moment it starts. That number is called the **PID - Process ID**. It's how the system (and you) identify and refer to a specific running task. If you want to stop something, you need its PID.
+- **前台进程**：可见地运行并连接到终端，关闭终端时通常会结束。
+- **后台进程**：在后台静默运行，终端仍可继续使用。
 
-Two types of processes worth knowing:
-
-- **Foreground processes** - running visibly, attached to your terminal. If you close the terminal, they die.
-- **Background processes** - running silently behind the scenes. Your terminal stays free while they run.
-
-![Linux Foreground vs Background Processes](assets/linux_processes_diagram_1789213627295.jpg)
+![Linux 前台与后台进程](assets/linux_processes_diagram_1789213627295.jpg)
 
 ---
 
-## Seeing what's running
+## 查看正在运行的内容
 
 ### ps
 
-`ps` gives you a snapshot of the processes running right now. On its own it only shows processes tied to your current terminal session, which isn't very useful. The version you actually want is:
+`ps` 提供当前进程的快照。不带参数时只显示当前终端会话关联的进程，更有用的形式是：
 
 ```bash
 ahegazy0@kali:~$ ps aux
 ```
 
-Breaking down those flags:
-- `a` - show processes from all users, not just you
-- `u` - show the user who owns each process
-- `x` - include processes not attached to any terminal (background daemons)
+- `a`：显示所有用户的进程
+- `u`：显示每个进程的所有者
+- `x`：包括未连接终端的后台守护进程
 
-The output looks like this:
+示例输出：
 
 ```
 USER       PID  %CPU  %MEM    VSZ   RSS  STAT  COMMAND
@@ -48,184 +43,147 @@ kali      1023   0.3   1.2  54320  6200  S     bash
 kali      1587   2.1   4.5 412300 22800  Sl    firefox
 ```
 
-The columns that matter most:
-
-| Column | What it tells you |
+| 列 | 含义 |
 |---|---|
-| USER | Who owns the process |
-| PID | The process ID - this is what you'll use to kill it |
-| %CPU | How much CPU it's using |
-| %MEM | How much RAM it's using |
-| COMMAND | What program is actually running |
+| USER | 进程所有者 |
+| PID | 进程 ID，结束进程时使用 |
+| %CPU | 占用的 CPU 百分比 |
+| %MEM | 占用的内存百分比 |
+| COMMAND | 实际运行的程序 |
 
-`ps aux` is a static snapshot. It shows you the state of things at the exact moment you ran the command, then stops updating.
-
----
+`ps aux` 是静态快照，只显示执行命令那一刻的状态，不会自动刷新。
 
 ### top
 
-`top` is the live version. It refreshes every few seconds and shows you what's currently running, sorted by CPU usage by default - so whatever is eating the most resources sits at the top.
+`top` 是实时版本，每隔几秒刷新一次，默认按 CPU 使用率排序，占用资源最多的进程位于顶部：
 
 ```bash
 ahegazy0@kali:~$ top
 ```
 
-Useful keys while inside top:
-
-| Key | What it does |
+| 按键 | 作用 |
 |---|---|
-| `k` | Kill a process - it'll ask you for the PID |
-| `M` | Sort by memory usage instead of CPU |
-| `P` | Sort by CPU usage (default) |
-| `q` | Quit |
+| `k` | 结束进程并输入 PID |
+| `M` | 按内存使用率排序 |
+| `P` | 按 CPU 使用率排序（默认） |
+| `q` | 退出 |
 
-If your computer suddenly feels slow and you don't know why, open `top` immediately. The greedy process will be right at the top of the list.
+电脑突然变慢而你不知道原因时，先打开 `top`，通常最耗资源的进程就在顶部。
 
 ---
 
-## Running processes in the background
+## 在后台运行进程
 
-By default, when you run a command, it takes over your terminal until it's done. You can't type anything else while it runs. If you're starting something like a browser or a long-running tool and you want your terminal back, add `&` to the end of the command.
+命令默认会占用终端直到完成。要启动浏览器或长时间运行的工具并立即收回终端，在命令末尾加 `&`：
 
 ```bash
 ahegazy0@kali:~$ firefox &
 [1] 2341
 ```
 
-That `[1]` is the job number. The `2341` is the PID. Firefox is now running in the background and your terminal is free to use.
+`[1]` 是任务编号，`2341` 是 PID。Firefox 已在后台运行，终端可以继续使用。
 
----
+## 在前台和后台之间切换
 
-## Moving processes between foreground and background
+暂停前台进程（不结束它）：
 
-Once something is running, you can move it around.
-
-**Suspend a foreground process** (pause it without killing it):
 ```bash
 ahegazy0@kali:~$ Ctrl + Z
 ```
 
-**Send a suspended process to the background** (keep it running, just out of sight):
+将暂停的进程放到后台，再带回前台：
+
 ```bash
 ahegazy0@kali:~$ bg
-```
-
-**Bring a background process back to the foreground:**
-```bash
 ahegazy0@kali:~$ fg
-```
-
-If you have multiple background jobs running, `fg` brings back the most recent one. To bring back a specific one, use its job number:
-
-```bash
 ahegazy0@kali:~$ fg 2
-```
-
-See all your background jobs and their numbers:
-
-```bash
 ahegazy0@kali:~$ jobs
 ```
 
+不带编号时，`fg` 会恢复最近的任务；`jobs` 会列出当前会话中的后台任务。
+
 ---
 
-## Killing processes
+## 结束进程
 
-When you need to stop something, you use `kill` followed by the PID.
+使用 `kill` 加 PID：
 
 ```bash
 ahegazy0@kali:~$ kill 2341
 ```
 
-This sends a polite termination signal - it asks the process to shut itself down cleanly. Most of the time this works fine.
-
-If the process is frozen or refusing to stop, you force it:
+这会发送礼貌的终止信号，请进程自行清理并退出。进程冻结或拒绝退出时，可以强制结束：
 
 ```bash
 ahegazy0@kali:~$ kill -9 2341
 ```
 
-The `-9` flag sends a **SIGKILL** signal, which the process cannot ignore, catch, or delay. It gets terminated immediately, no questions asked. Think of the regular `kill` as asking someone to leave, and `kill -9` as physically removing them.
+`-9` 发送 **SIGKILL**，进程无法忽略、捕获或延迟它，会立即终止。不要随意结束 root 所有的系统进程，否则可能使系统不稳定或崩溃。执行前先检查 `ps aux` 中的 COMMAND 列。
 
-**Be careful with root-owned processes.** If you kill a system process owned by root without knowing what it does, you can destabilize or crash the system. Always check the COMMAND column in `ps aux` before killing something you're not sure about.
+## 不用 ps 查找 PID
 
----
-
-## Finding a PID without ps
-
-If you already know the name of the process, you don't need to scroll through `ps aux` output. Use `pgrep`:
+知道进程名时，可以使用：
 
 ```bash
 ahegazy0@kali:~$ pgrep firefox
-```
-
-Returns just the PID. Clean and fast.
-
-Or use `pidof`:
-
-```bash
 ahegazy0@kali:~$ pidof firefox
 ```
 
-Does the same thing. Personal preference which one you use.
+二者都会直接返回 PID，选择自己习惯的即可。
 
 ---
 
-## Why this matters for hacking
+## 这对黑客工作为什么重要
 
-When you land on a system, one of the first things you do is run `ps aux` and look at what's running. You're looking for:
+进入系统后，首先运行 `ps aux` 查看正在运行的内容，重点关注：
 
-- **Antivirus or endpoint protection** - if you're about to run an exploit or drop a file, you need to know what's watching. Finding the process and killing it (if you have the permissions) is a common step.
-- **Interesting services** - databases, web servers, internal tools. These tell you what the machine is being used for and what might be worth targeting.
-- **Other users' processes** - if multiple users are logged in, their processes show up here too. That's useful information.
+- **杀毒软件或终端防护**：运行漏洞利用或上传文件前，要知道什么程序在监控；拥有权限时，结束相关进程可能是常见步骤。
+- **有趣的服务**：数据库、Web 服务器和内部工具能说明机器用途，并提示潜在目标。
+- **其他用户的进程**：多个用户登录时，他们的进程也会显示出来，这些信息很有价值。
 
-`ps aux` is a recon tool as much as it is a management tool.
+因此，`ps aux` 既是管理工具，也是侦察工具。
 
 ---
 
-## Command Reference
+## 命令速查
 
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `ps aux` | Snapshot of every running process |
-| `top` | Live view of processes sorted by resource use |
-| `kill PID` | Politely ask a process to stop |
-| `kill -9 PID` | Force stop a process immediately |
-| `pgrep name` | Get the PID of a process by name |
-| `pidof name` | Same as pgrep, alternate syntax |
-| `jobs` | List all background jobs in current session |
-| `fg` | Bring the last background job to the foreground |
-| `bg` | Send a suspended job to the background |
-| `command &` | Start a command in the background from the start |
-| `Ctrl + Z` | Suspend a running foreground process |
-| `updatedb` | (from last module) Just noting - needs root |
+| `ps aux` | 显示所有运行中进程的快照 |
+| `top` | 实时按资源使用情况查看进程 |
+| `kill PID` | 请求进程退出 |
+| `kill -9 PID` | 立即强制结束进程 |
+| `pgrep name` | 按名称获取 PID |
+| `pidof name` | 与 pgrep 类似的另一种写法 |
+| `jobs` | 列出当前会话中的后台任务 |
+| `fg` | 将最近的后台任务带到前台 |
+| `bg` | 将暂停任务放到后台 |
+| `command &` | 从一开始就在后台运行命令 |
+| `Ctrl + Z` | 暂停前台进程 |
+| `updatedb` | 上一模块的命令，需要 root 权限 |
 
----
+## 关于信号
 
-## A note on signals
+`kill` 实际上是向进程发送**信号**。`-9`（SIGKILL）最强硬，常用的信号还包括：
 
-`kill` doesn't just kill things - it sends **signals** to processes. `-9` (SIGKILL) is the most aggressive one. But there are others worth knowing eventually:
-
-| Signal | Number | What it does |
+| 信号 | 编号 | 作用 |
 |---|---|---|
-| SIGTERM | 15 | Polite shutdown request (default) |
-| SIGKILL | 9 | Immediate forced termination |
-| SIGHUP | 1 | Reload config without restarting |
-
-You'll mostly use 9 and 15. The others come up later when you're dealing with services and daemons.
+| SIGTERM | 15 | 请求进程正常退出（默认） |
+| SIGKILL | 9 | 立即强制终止 |
+| SIGHUP | 1 | 重新加载配置而不重启 |
 
 ---
 
-## Practice
+## 练习
 
-- [ ] Run `ps aux` and find your terminal process - note its PID
-- [ ] Open `top` and watch it update. Find which process is using the most CPU right now
-- [ ] Run `leafpad &` (or any text editor) in the background, then use `pgrep` to find its PID, then kill it with `kill -9`
-- [ ] Try `Ctrl + Z` on a running command, then bring it back with `fg`
+- [ ] 运行 `ps aux` 找到自己的终端进程并记录 PID
+- [ ] 打开 `top` 观察刷新，找出当前 CPU 占用最高的进程
+- [ ] 在后台运行 `leafpad &`（或其他编辑器），用 `pgrep` 找到 PID，再用 `kill -9` 结束
+- [ ] 对正在运行的命令按 `Ctrl + Z`，再用 `fg` 恢复
 
-The kill-a-background-process flow is the one to get comfortable with. Run something, find its PID, kill it. Do that a few times until it feels automatic.
+重点练习“启动后台进程、查找 PID、结束进程”的流程，重复几次直到熟练。
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-*Up next: Module 7 - Managing User Environment Variables*
+*下一篇：模块 7——用户环境变量管理*

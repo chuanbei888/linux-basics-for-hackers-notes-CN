@@ -1,82 +1,47 @@
-# Linux Basics for Hackers
-## Module 14 - Wireless Networking
+# 黑客 Linux 基础
+## 模块 14：无线网络
 
 ---
 
-## Overview
+## 概述
 
-Wi-Fi is one of the most common attack surfaces in the real world because it's everywhere and often configured poorly. This module covers how wireless networks actually work, the tools used to inspect and audit them, and how Bluetooth fits into the picture. Everything here should only be used on networks and devices you own or have explicit written permission to test.
+Wi-Fi 普遍存在且经常配置不当，是常见的攻击面。本模块介绍无线网络的工作方式、用于检查和审计的工具，以及 Bluetooth 的基本操作。所有内容只应在自己拥有或明确获书面授权的网络和设备上使用。
 
----
+## Wi-Fi 的工作方式
 
-## How Wi-Fi actually works (the part that matters for this)
+笔记本连接路由器时，会在特定频率交换无线电信号。默认情况下，网卡只关注发给自己的数据包，这叫**管理模式**（managed mode）。无线分析需要接收范围内所有设备的数据包，这叫**监听模式**（monitor mode）。
 
-When your laptop connects to a router, it's exchanging radio signals on a specific frequency. Normally your Wi-Fi card only pays attention to packets addressed to it - it ignores everything else floating around in the air. This is called **managed mode**.
+并非所有网卡都支持监听模式或数据包注入，通常需要兼容的 USB 无线适配器。
 
-To do any serious wireless analysis, you need your card to listen to everything - all packets from all devices on all networks within range, not just the ones meant for you. This is called **monitor mode**. It's the equivalent of going from a private conversation to hearing everything in the room.
+## aircrack-ng 工具套件
 
-Not every Wi-Fi adapter supports monitor mode or packet injection. The built-in card on most laptops does not. You need an external USB adapter that specifically supports these features - the Alfa AWUS036ACH and similar Alfa adapters are the standard choice for this kind of work.
-
----
-
-## The wireless toolkit - aircrack-ng
-
-`aircrack-ng` is a suite of tools, not a single program. The main ones you'll use:
-
-| Tool | What it does |
+| 工具 | 作用 |
 |---|---|
-| `airmon-ng` | Enables and disables monitor mode on your adapter |
-| `airodump-ng` | Captures packets and shows all nearby networks |
-| `aireplay-ng` | Injects packets into a network (for forcing reconnections, etc.) |
-| `aircrack-ng` | Attempts to crack captured WPA handshakes |
+| `airmon-ng` | 启用或关闭监听模式 |
+| `airodump-ng` | 捕获数据包并显示附近网络 |
+| `aireplay-ng` | 向网络注入数据包（仅限授权测试） |
+| `aircrack-ng` | 尝试破解捕获的 WPA 握手 |
 
-They work together as a pipeline. You'll rarely use just one.
+它们通常组合成工作流，而不是单独使用。
 
----
-
-## Putting your card into monitor mode
-
-First, find your wireless interface name:
+## 将网卡切换到监听模式
 
 ```bash
 ahegazy0@kali:~$ iwconfig
-```
-
-Output shows your interfaces. It's usually `wlan0` or similar.
-
-Before enabling monitor mode, kill any processes that might interfere:
-
-```bash
 ahegazy0@kali:~$ airmon-ng check kill
-```
-
-This stops NetworkManager and other background tools that try to manage the interface. If you skip this step, monitor mode often breaks or the interface keeps dropping.
-
-Now enable monitor mode:
-
-```bash
 ahegazy0@kali:~$ airmon-ng start wlan0
-```
-
-Your interface will likely be renamed to `wlan0mon` to indicate it's now in monitor mode. Confirm with `iwconfig` again.
-
-To go back to normal managed mode:
-
-```bash
 ahegazy0@kali:~$ airmon-ng stop wlan0mon
 ```
 
----
+接口通常会从 `wlan0` 改名为 `wlan0mon`。`check kill` 会停止可能干扰监听模式的 NetworkManager 等进程，完成后用 `airmon-ng stop` 恢复普通模式。
 
-## Scanning nearby networks with airodump-ng
-
-With your card in monitor mode, you can capture everything in the air:
+## 使用 airodump-ng 扫描附近网络
 
 ```bash
 ahegazy0@kali:~$ airodump-ng wlan0mon
 ```
 
-Output shows every network within range:
+示例输出：
 
 ```
 BSSID              PWR  Beacons  #Data  CH   MB   ENC   ESSID
@@ -84,136 +49,91 @@ AA:BB:CC:DD:EE:FF  -45      120     34   6  130   WPA2  HomeNetwork
 11:22:33:44:55:66  -72       80     12  11   54   WPA2  CoffeeShop_WiFi
 ```
 
-The columns to understand:
-
-| Column | What it means |
+| 列 | 含义 |
 |---|---|
-| BSSID | The MAC address of the router |
-| PWR | Signal strength - more negative = weaker signal |
-| CH | Channel the network is broadcasting on |
-| ENC | Encryption type (WPA2, WPA3, WEP, OPN) |
-| ESSID | The network name (SSID) you see when connecting |
+| BSSID | 路由器的 MAC 地址 |
+| PWR | 信号强度，越负越弱 |
+| CH | 网络使用的信道 |
+| ENC | 加密类型（WPA2、WPA3、WEP、OPN） |
+| ESSID | 连接时看到的网络名称 |
 
-To focus on a specific network and also see the connected clients:
+在授权网络上聚焦特定路由器：
 
 ```bash
 ahegazy0@kali:~$ airodump-ng --bssid AA:BB:CC:DD:EE:FF --channel 6 -w capture wlan0mon
 ```
 
-- `--bssid` filters to one specific router
-- `--channel` locks to that channel so you don't miss packets while hopping
-- `-w capture` writes everything captured to files starting with "capture"
+## 无线术语
 
----
+- **SSID**：网络名称
+- **BSSID**：路由器 MAC 地址
+- **信道**：2.4 GHz 或 5 GHz 频段中的无线信道
+- **WPA2/WPA3**：现代 Wi-Fi 加密标准
+- **WEP**：已经被攻破的旧标准，不应继续使用
+- **握手**：设备连接 WPA2 时交换的四次握手，授权测试中可用于离线验证密码强度
 
-## Wi-Fi terms to know
+## 使用 iwlist 扫描
 
-**SSID** - the network name. What you see in the list when you connect.
-
-**BSSID** - the router's MAC address. Unlike the SSID (which the owner can set to anything), the BSSID is tied to the hardware.
-
-**Channel** - Wi-Fi broadcasts on specific channels within the 2.4GHz or 5GHz band. The 2.4GHz band has channels 1–14 (1, 6, and 11 are the standard non-overlapping ones). The 5GHz band has many more.
-
-**WPA2** - the current standard encryption for Wi-Fi networks. Uses AES encryption. Replaced WEP (which was completely broken) and WPA. WPA3 is the newer standard starting to appear on modern routers.
-
-**WEP** - old and completely broken. A network using WEP can be cracked in minutes. If you ever see one in the wild it's a legacy device that hasn't been updated in a very long time.
-
-**Handshake** - when a device connects to a WPA2 network, the router and device exchange a 4-way handshake to verify the password. Capturing this handshake is what WPA2 cracking is based on - you capture it, then try to crack it offline.
-
----
-
-## Scanning with iwlist
-
-If you just want to see nearby networks without going into monitor mode:
+只想查看附近网络而不切换监听模式时：
 
 ```bash
 ahegazy0@kali:~$ iwlist wlan0 scan
 ```
 
-This gives you a basic scan of visible networks - SSID, BSSID, channel, signal strength, encryption type. Less detailed than airodump-ng but doesn't require monitor mode and works fine for reconnaissance without touching anything.
+它会显示 SSID、BSSID、信道、信号强度和加密类型，信息不如 airodump-ng 详细，但适合基础侦察。
 
----
+## 使用 BlueZ 操作 Bluetooth
 
-## Bluetooth with BlueZ
-
-Bluetooth is a shorter-range wireless protocol used by phones, headphones, keyboards, speakers, smartwatches, and dozens of other devices. The tools for working with Bluetooth on Linux come from the **BlueZ** package.
-
-**Scanning for nearby Bluetooth devices:**
+Linux 的 Bluetooth 工具来自 **BlueZ**：
 
 ```bash
 ahegazy0@kali:~$ hcitool scan
 Scanning...
     AA:BB:CC:DD:EE:FF    John's iPhone
     11:22:33:44:55:66    Sony WH-1000XM4
-```
 
-This shows any device in discoverable mode. A device in discoverable mode is actively advertising its presence - this is how you pair new devices. Many people leave their devices permanently discoverable without realizing it.
-
-**Checking if a device is reachable:**
-
-```bash
 ahegazy0@kali:~$ l2ping AA:BB:CC:DD:EE:FF
-```
-
-This pings a Bluetooth device the same way `ping` works for IP addresses - confirms the device is within range and responding.
-
-**Getting device information:**
-
-```bash
 ahegazy0@kali:~$ hcitool info AA:BB:CC:DD:EE:FF
-```
-
-Returns the device name, manufacturer, supported features, and other metadata.
-
-**Scanning with more detail:**
-
-```bash
 ahegazy0@kali:~$ hcitool lescan
 ```
 
-`lescan` is for **Bluetooth Low Energy (BLE)** devices - fitness trackers, smart home sensors, IoT devices. These often broadcast continuously and are a growing attack surface.
+`hcitool scan` 查找可发现设备，`l2ping` 检查设备是否可达，`hcitool info` 获取设备信息，`lescan` 用于 Bluetooth Low Energy（BLE）设备。
+
+## 无线侦察中要关注什么
+
+- **OPN 开放网络**：无加密，流量可能被直接读取
+- **WEP 网络**：加密已失效
+- **弱密码的 WPA2 网络**：握手可被捕获并离线验证
+- **隐藏 SSID**：名称不广播，但 BSSID 仍可能出现
+- **处于可发现模式的 Bluetooth 设备**：尤其是本不应公开的设备
 
 ---
 
-## What you're looking for in wireless recon
+## 命令速查
 
-When you're doing wireless reconnaissance on a network you're authorized to test, here's what matters:
-
-- **Open networks (OPN)** - no encryption, everything transmitted is readable
-- **WEP networks** - broken encryption, crackable in minutes
-- **WPA2 networks with weak passwords** - capturable handshake, crackable offline with wordlists
-- **Hidden SSIDs** - networks that don't broadcast their name, visible in airodump-ng output as blank ESSID fields but the BSSID is still there
-- **Bluetooth devices in discoverable mode** - especially devices that shouldn't be discoverable (keyboards, corporate laptops)
-
----
-
-## Command Reference
-
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `iwconfig` | Show wireless interfaces and their current mode |
-| `iwlist wlan0 scan` | Scan for nearby Wi-Fi networks |
-| `airmon-ng check kill` | Kill processes that interfere with monitor mode |
-| `airmon-ng start wlan0` | Enable monitor mode |
-| `airmon-ng stop wlan0mon` | Disable monitor mode |
-| `airodump-ng wlan0mon` | Capture packets and show all nearby networks |
-| `airodump-ng --bssid [MAC] --channel [CH] -w out wlan0mon` | Capture from a specific network |
-| `hcitool scan` | Scan for discoverable Bluetooth devices |
-| `hcitool lescan` | Scan for Bluetooth Low Energy devices |
-| `l2ping [MAC]` | Ping a Bluetooth device |
-| `hcitool info [MAC]` | Get details about a Bluetooth device |
+| `iwconfig` | 查看无线接口和当前模式 |
+| `iwlist wlan0 scan` | 扫描附近 Wi-Fi |
+| `airmon-ng check kill` | 停止干扰监听模式的进程 |
+| `airmon-ng start wlan0` | 启用监听模式 |
+| `airmon-ng stop wlan0mon` | 关闭监听模式 |
+| `airodump-ng wlan0mon` | 捕获数据包并显示网络 |
+| `airodump-ng --bssid [MAC] --channel [CH] -w out wlan0mon` | 捕获指定网络 |
+| `hcitool scan` | 扫描可发现的 Bluetooth 设备 |
+| `hcitool lescan` | 扫描 BLE 设备 |
+| `l2ping [MAC]` | Ping Bluetooth 设备 |
+| `hcitool info [MAC]` | 获取设备详情 |
 
+## 练习
+
+- [ ] 在自己的网络上运行 `iwlist wlan0 scan`，记录信道和加密类型
+- [ ] 在自己的设备附近运行 `hcitool scan`，观察可发现设备
+- [ ] 只有在拥有兼容适配器且获得授权时，才运行监听模式和 `airodump-ng`
+
+不要捕获不属于你的网络流量；在多数国家，即使不使用数据，未经授权的捕获也可能违法。
+
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-## Practice
-
-- [ ] Run `iwlist wlan0 scan` and look at the output - find your own home network, note the channel and encryption type
-- [ ] Run `hcitool scan` in your room and see what Bluetooth devices show up - check how many are in discoverable mode
-- [ ] If you have a compatible adapter: put it in monitor mode with `airmon-ng`, run `airodump-ng` for 30 seconds, find your home router in the output and note its BSSID and channel, then stop capture and take the card out of monitor mode
-
-Only do the airodump-ng practice on your own home network. Capturing traffic from networks you don't own is illegal in most countries regardless of whether you do anything with the data.
-
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
----
-
-*Up next: Module 15 - Managing the Linux Kernel & Loadable Kernel Modules*
+*下一篇：模块 15——Linux 内核与可加载内核模块*

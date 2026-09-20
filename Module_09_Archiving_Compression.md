@@ -1,234 +1,151 @@
-# Linux Basics for Hackers
-## Module 9 - Archiving & Compression
+# 黑客 Linux 基础
+## 模块 9：归档与压缩
 
 ---
 
-## Overview
+## 概述
 
-Sometimes you need to move a bunch of files as one package. Sometimes you need to shrink a large file before sending it somewhere. And sometimes - in forensics or serious recon - you need an exact, bit-for-bit copy of an entire disk. This module covers all three: archiving with `tar`, compressing with `gzip` and `bzip2`, and low-level disk imaging with `dd`.
+有时需要把许多文件作为一个包移动，有时需要在传输前缩小大文件；在取证或严肃侦察中，还可能需要制作整块磁盘的逐比特副本。本模块介绍三类操作：用 `tar` 归档、用 `gzip` 和 `bzip2` 压缩，以及用 `dd` 制作底层磁盘镜像。
 
----
+## 归档和压缩不是一回事
 
-## Archiving vs compression - not the same thing
+**归档**是把多个文件组合成一个文件，不会减小体积，Linux 中使用 `tar`。**压缩**是通过更高效的编码让文件变小，使用 `gzip` 或 `bzip2`，通常作用于单个文件。
 
-These two words get used interchangeably but they mean different things.
-
-**Archiving** means combining multiple files into one single file. It doesn't make the files smaller - it just bundles them together. The tool for this in Linux is `tar`.
-
-**Compression** means making a file smaller by encoding it more efficiently. The tools for this are `gzip` and `bzip2`. They work on single files.
-
-In practice you usually do both at once - archive first, then compress the result. That's where `.tar.gz` files come from. The `.tar` part means it was archived, the `.gz` part means it was then compressed with gzip.
+实践中常常先归档再压缩，因此会看到 `.tar.gz`：`.tar` 表示已归档，`.gz` 表示之后使用 gzip 压缩。
 
 ---
 
-## tar - bundling files together
+## tar：打包文件
 
-`tar` stands for "Tape Archive" - the name comes from when backups were stored on magnetic tape. The name is old, the tool is still everywhere.
+`tar` 是 Tape Archive（磁带归档）的缩写，名称源于磁带备份，但工具至今仍非常常用。
 
-**Creating an archive:**
+创建归档：
 
 ```bash
 ahegazy0@kali:~$ tar -cvf archive.tar file1.txt file2.txt file3.txt
 ```
 
-Breaking down the flags:
-- `-c` - create a new archive
-- `-v` - verbose, show what's being added (optional but useful)
-- `-f` - the next argument is the filename of the archive
+- `-c`：创建归档
+- `-v`：显示正在添加的内容
+- `-f`：后一个参数是归档文件名
 
-The result is `archive.tar` - one file containing all three.
-
-**Extracting an archive:**
+解包与查看内容：
 
 ```bash
 ahegazy0@kali:~$ tar -xvf archive.tar
-```
-
-- `-x` - extract
-- `-v` - verbose
-- `-f` - file to extract from
-
-This puts the files back in your current directory.
-
-**Listing contents without extracting:**
-
-```bash
 ahegazy0@kali:~$ tar -tvf archive.tar
 ```
 
-- `-t` - list contents
+`-x` 表示解包，`-t` 表示列出内容。查看时不需要实际解压。
 
-Useful when someone hands you a tar file and you want to see what's inside before unpacking it.
+## gzip 和 gunzip：缩小文件
 
----
-
-## gzip and gunzip - making files smaller
-
-`gzip` compresses a single file in place - the original disappears and gets replaced by a `.gz` version.
+`gzip` 会原地压缩单个文件，原文件被 `.gz` 文件替代：
 
 ```bash
 ahegazy0@kali:~$ gzip archive.tar
-```
-
-Result: `archive.tar` is gone, replaced by `archive.tar.gz`.
-
-To decompress:
-
-```bash
 ahegazy0@kali:~$ gunzip archive.tar.gz
-```
-
-Or equivalently:
-
-```bash
 ahegazy0@kali:~$ gzip -d archive.tar.gz
 ```
 
-Both do the same thing - restore the original file.
+`gunzip` 和 `gzip -d` 都会恢复原文件。
 
----
+## 一次完成归档和压缩：tar.gz
 
-## Doing both at once - tar.gz
-
-Instead of running `tar` then `gzip` separately, you can do it in one command with the `-z` flag:
-
-**Create a compressed archive:**
+`-z` 表示同时使用 gzip：
 
 ```bash
 ahegazy0@kali:~$ tar -cvzf archive.tar.gz file1.txt file2.txt file3.txt
-```
-
-The `z` added to the flags means "also compress with gzip."
-
-**Extract a compressed archive:**
-
-```bash
 ahegazy0@kali:~$ tar -xvzf archive.tar.gz
 ```
 
-Same idea - `x` to extract, `z` to handle the gzip layer.
+这是最常见的格式，“tar 包”通常指 `.tar.gz` 文件。
 
-This is the format you'll see most often. When someone says "tar-ball" they usually mean a `.tar.gz` file.
+## bzip2：gzip 的另一种选择
 
----
-
-## bzip2 - an alternative to gzip
-
-`bzip2` is another compression tool. It generally produces smaller files than gzip but takes longer to compress and decompress. For most purposes the difference is small, but it's worth knowing both exist.
+`bzip2` 往往比 gzip 生成更小的文件，但压缩和解压更慢：
 
 | | gzip | bzip2 |
 |---|---|---|
-| Speed | Faster | Slower |
-| Compression ratio | Good | Better |
-| File extension | `.gz` | `.bz2` |
-| tar flag | `-z` | `-j` |
-
-With tar:
+| 速度 | 更快 | 更慢 |
+| 压缩率 | 良好 | 更高 |
+| 扩展名 | `.gz` | `.bz2` |
+| tar 选项 | `-z` | `-j` |
 
 ```bash
 ahegazy0@kali:~$ tar -cvjf archive.tar.bz2 files/
-```
-
-Extract:
-
-```bash
 ahegazy0@kali:~$ tar -xvjf archive.tar.bz2
 ```
 
-The only difference is `-j` instead of `-z`.
+## dd：底层磁盘复制
 
----
-
-## dd - low-level disk copying
-
-`dd` is in a completely different category from the other tools here. While `tar` and `gzip` work with files and folders, `dd` works at the raw disk level. It copies data block by block, byte by byte, without caring about the filesystem structure at all.
+`dd` 直接在原始磁盘层逐块复制数据，不关心文件系统结构：
 
 ```bash
 ahegazy0@kali:~$ dd if=/dev/sda of=/dev/sdb
 ```
 
-- `if` - input file (the source)
-- `of` - output file (the destination)
+- `if`：输入文件，即源
+- `of`：输出文件，即目标
 
-This copies every single bit from `/dev/sda` (your first hard drive) to `/dev/sdb` (a second drive). The copy is perfect - it includes deleted files, filesystem metadata, everything. The destination drive becomes an exact clone of the source.
-
-**Making a disk image file:**
+这会把 `/dev/sda` 的每一位复制到 `/dev/sdb`，包括已删除文件和文件系统元数据，目标盘会成为源盘的精确克隆。也可以制作镜像文件：
 
 ```bash
 ahegazy0@kali:~$ dd if=/dev/sda of=disk_image.img
-```
-
-This saves the entire disk as a file instead of copying it to another drive. Forensics investigators do this so they can work on the image without touching the original evidence.
-
-**Why it's called "Data Destroyer":**
-
-If you swap `if` and `of` by accident - or target the wrong drive - you overwrite a real disk with zeros or garbage. It doesn't ask for confirmation. There's no undo.
-
-```bash
-ahegazy0@kali:~$ dd if=/dev/sdb of=/dev/sda    ← overwrites your main drive with whatever is on sdb
-```
-
-Always double-check your `if` and `of` values before running dd. Triple-check if one of them is a real disk.
-
-**Adding a progress indicator:**
-
-By default `dd` runs silently. You have no idea how far along it is. Add `status=progress` to see output:
-
-```bash
 ahegazy0@kali:~$ dd if=/dev/sda of=disk_image.img status=progress
 ```
 
+`status=progress` 显示进度。
+
+> **严重警告：** 如果误换 `if` 和 `of`，或指定了错误磁盘，`dd` 会直接覆盖真实磁盘，不会询问确认，也无法撤销。运行前至少三次核对输入和输出路径。
+
+```bash
+ahegazy0@kali:~$ dd if=/dev/sdb of=/dev/sda    ← 用 sdb 内容覆盖主磁盘
+```
+
+## 数字取证中的用途
+
+调查人员通常先制作原始磁盘的 `dd` 镜像，再在镜像上分析，避免改动证据。由于按块复制，它能保留文件、已删除文件、文件片段、文件系统结构和空闲空间，Autopsy、Sleuth Kit 等工具可以进一步分析。
+
 ---
 
-## The forensics angle
+## 命令速查
 
-`dd` is a standard tool in digital forensics. When investigators seize a computer, they don't work directly on the original drive - they make a `dd` image of it first, then analyze the image. This way the evidence is never touched or altered.
-
-Because `dd` copies at the block level, it captures everything: files, deleted files, file fragments, filesystem structure, slack space. Tools like Autopsy and Sleuth Kit can then analyze the image and recover data that would be invisible to a normal file browser.
-
----
-
-## Command Reference
-
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `tar -cvf archive.tar files` | Create a tar archive |
-| `tar -xvf archive.tar` | Extract a tar archive |
-| `tar -tvf archive.tar` | List contents of a tar archive |
-| `tar -cvzf archive.tar.gz files` | Create a gzip-compressed archive |
-| `tar -xvzf archive.tar.gz` | Extract a gzip-compressed archive |
-| `tar -cvjf archive.tar.bz2 files` | Create a bzip2-compressed archive |
-| `tar -xvjf archive.tar.bz2` | Extract a bzip2-compressed archive |
-| `gzip filename` | Compress a file with gzip |
-| `gunzip filename.gz` | Decompress a .gz file |
-| `dd if=source of=destination` | Copy raw blocks from source to destination |
-| `dd if=/dev/sda of=image.img status=progress` | Create a disk image with progress output |
+| `tar -cvf archive.tar files` | 创建 tar 归档 |
+| `tar -xvf archive.tar` | 解包 tar 归档 |
+| `tar -tvf archive.tar` | 列出 tar 内容 |
+| `tar -cvzf archive.tar.gz files` | 创建 gzip 压缩归档 |
+| `tar -xvzf archive.tar.gz` | 解压 gzip 归档 |
+| `tar -cvjf archive.tar.bz2 files` | 创建 bzip2 压缩归档 |
+| `tar -xvjf archive.tar.bz2` | 解压 bzip2 归档 |
+| `gzip filename` | 使用 gzip 压缩文件 |
+| `gunzip filename.gz` | 解压 `.gz` 文件 |
+| `dd if=source of=destination` | 复制原始磁盘块 |
+| `dd if=/dev/sda of=image.img status=progress` | 制作带进度显示的镜像 |
 
----
-
-## tar flags at a glance
-
-| Flag | Meaning |
+| 选项 | 含义 |
 |---|---|
-| `-c` | Create a new archive |
-| `-x` | Extract from an archive |
-| `-t` | List contents |
-| `-v` | Verbose output |
-| `-f` | Specify the filename |
-| `-z` | Use gzip compression |
-| `-j` | Use bzip2 compression |
+| `-c` | 创建归档 |
+| `-x` | 从归档中解包 |
+| `-t` | 列出内容 |
+| `-v` | 详细输出 |
+| `-f` | 指定文件名 |
+| `-z` | 使用 gzip |
+| `-j` | 使用 bzip2 |
 
 ---
 
-## Practice
+## 练习
 
-- [ ] Create three empty text files with `touch file1.txt file2.txt file3.txt`
-- [ ] Bundle them into a tar archive: `tar -cvf bundle.tar file1.txt file2.txt file3.txt`
-- [ ] Compress it: `gzip bundle.tar` - then run `ls -lh` and see the size difference
-- [ ] Extract it back out with `tar -xvzf bundle.tar.gz` and confirm the files are there
-- [ ] Try the same thing with `bzip2` and compare the final file sizes between `.tar.gz` and `.tar.bz2`
+- [ ] 用 `touch file1.txt file2.txt file3.txt` 创建三个空文件
+- [ ] 用 `tar -cvf bundle.tar file1.txt file2.txt file3.txt` 打包
+- [ ] 运行 `gzip bundle.tar`，再用 `ls -lh` 比较大小
+- [ ] 用 `tar -xvzf bundle.tar.gz` 解压并确认文件存在
+- [ ] 使用 bzip2 重复实验，比较 `.tar.gz` 和 `.tar.bz2` 的大小
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-*Up next: Module 10 - Filesystem & Storage Devices*
+*下一篇：模块 10——文件系统与存储设备*

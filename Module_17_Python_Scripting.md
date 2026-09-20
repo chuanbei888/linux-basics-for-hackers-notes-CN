@@ -1,51 +1,36 @@
-# Linux Basics for Hackers
-## Module 17 - Python Scripting
+# 黑客 Linux 基础
+## 模块 17：Python 脚本
 
 ---
 
-## Overview
+## 概述
 
-Bash scripting gets you far for simple automation and quick one-liners. Python is what you reach for when things get more complex - when you need to parse data, work with networks, build tools that make decisions, or understand the exploit code that other people have written. This module covers the Python fundamentals you need as a foundation for security work.
+Bash 脚本适合简单自动化和快速单行命令；任务变复杂时，例如解析数据、处理网络、构建需要决策的工具，或阅读别人编写的漏洞利用代码，就应该使用 Python。本模块介绍安全工作所需的 Python 基础。
 
----
+## 为什么安全工作常用 Python
 
-## Why Python for security work
+- 语法清晰易读，可以快速理解脚本
+- 标准库覆盖网络、文件 I/O、加密等功能
+- 有大量面向安全任务的第三方库
+- 许多漏洞利用、工具和概念验证代码都用 Python 编写
+- Linux 支持 Python 运行
 
-Python has been the dominant language in security and hacking for a long time. The reasons aren't complicated:
+即使还不会编写工具，能够阅读 Python 也非常有用。看不懂漏洞脚本，就等于在盲目工作。
 
-- The syntax is clean and readable - you can understand what a script does quickly
-- The standard library covers networking, file I/O, cryptography, and more without installing anything extra
-- Thousands of third-party libraries exist for security-specific tasks
-- Most exploits, tools, and proof-of-concept code you'll find online are written in Python
-- It runs everywhere Linux does
+## Python 2 与 Python 3
 
-Being able to read Python is genuinely useful even before you're writing your own tools. Most exploits you'll encounter are Python scripts. If you can't read them, you're working blind.
-
----
-
-## Python 2 vs Python 3
-
-Python 2 is dead - officially end-of-life since 2020. Everything you write should be Python 3. Kali ships with Python 3 as the default. When you see old tutorials using `print "hello"` without parentheses, that's Python 2 syntax. In Python 3 it's `print("hello")`.
-
-Check your version:
+Python 2 已于 2020 年正式停止支持。新代码应使用 Python 3，Kali 默认也提供 Python 3。旧教程中的 `print "hello"` 是 Python 2 语法，Python 3 应写成 `print("hello")`。
 
 ```bash
 ahegazy0@kali:~$ python3 --version
-```
-
-Run the Python 3 interpreter:
-
-```bash
 ahegazy0@kali:~$ python3
 ```
 
-This drops you into an interactive shell where you can type Python directly. Good for testing small things. Exit with `exit()` or `Ctrl+D`.
+第二条命令会进入交互式解释器，适合测试小片段；用 `exit()` 或 `Ctrl+D` 退出。
 
----
+## 第一个脚本
 
-## Your first script
-
-Create a file called `hello.py`:
+创建 `hello.py`：
 
 ```python
 #!/usr/bin/env python3
@@ -53,86 +38,56 @@ Create a file called `hello.py`:
 print("Hello, world")
 ```
 
-The shebang line is slightly different from Bash - `/usr/bin/env python3` finds the Python 3 interpreter wherever it lives on the system, which is more portable than hardcoding the path.
-
-Run it:
+`/usr/bin/env python3` 会查找系统中的 Python 3，比写死解释器路径更具可移植性。
 
 ```bash
 ahegazy0@kali:~$ python3 hello.py
-```
-
-Or make it executable and run it directly:
-
-```bash
 ahegazy0@kali:~$ chmod 755 hello.py
 ahegazy0@kali:~$ ./hello.py
 ```
 
----
+## 变量和数据类型
 
-## Variables and data types
-
-Python is dynamically typed - you don't declare types, you just assign values and Python figures it out.
+Python 是动态类型语言，不需要声明类型：
 
 ```python
-name = "Alice"           # string
-port = 80                # integer
-pi = 3.14                # float
-active = True            # boolean
+name = "Alice"           # 字符串
+port = 80                # 整数
+pi = 3.14                # 浮点数
+active = True            # 布尔值
 ```
 
-**Strings** - text, always in quotes:
+字符串、整数、列表和字典示例：
 
 ```python
 target = "192.168.1.1"
 print("Scanning: " + target)
-print(f"Scanning: {target}")    # f-string, cleaner way to embed variables
-```
+print(f"Scanning: {target}")    # f-string
 
-**Integers** - whole numbers, used for ports, counts, indexes:
-
-```python
 port = 22
 print(port + 1)    # 23
-```
 
-**Lists** - ordered collections, like arrays:
-
-```python
 ports = [22, 80, 443, 3306]
-print(ports[0])      # 22 - indexing starts at 0
-print(ports[-1])     # 3306 - negative index counts from the end
-```
+print(ports[0])      # 22，索引从 0 开始
+print(ports[-1])     # 3306，从末尾倒数
 
-**Dictionaries** - key-value pairs, like a lookup table:
-
-```python
 user = {"username": "admin", "password": "password123", "role": "root"}
 print(user["username"])    # admin
 ```
 
-Dictionaries are very common in security scripts - you'll see them used for storing parsed data, HTTP headers, configuration values, and more.
+字典是安全脚本中常见的数据结构，可保存解析结果、HTTP 请求头和配置值。
 
----
-
-## Getting input from the user
+## 接收用户输入
 
 ```python
 target = input("Enter target IP: ")
 print("Scanning " + target)
-```
-
-`input()` pauses and waits, then stores whatever the user types as a string. If you need it as a number:
-
-```python
 port = int(input("Enter port: "))
 ```
 
-`int()` converts the string to an integer. Without this conversion, `"80" + 1` would throw an error - Python doesn't silently mix types.
+`input()` 返回字符串；需要数字时用 `int()` 转换，否则字符串 `"80"` 不能直接与数字 1 相加。
 
----
-
-## Conditionals
+## 条件语句
 
 ```python
 password = input("Enter password: ")
@@ -145,38 +100,32 @@ else:
     print("Wrong password")
 ```
 
-Python uses indentation to define code blocks - no curly braces. The standard is 4 spaces. If your indentation is inconsistent, Python will throw an error. This is the thing that trips up almost every beginner coming from another language.
+Python 使用缩进而不是花括号定义代码块，标准缩进为 4 个空格。
 
-Common comparison operators:
-
-| Operator | Meaning |
+| 运算符 | 含义 |
 |---|---|
-| `==` | Equal to |
-| `!=` | Not equal to |
-| `>` `<` | Greater / less than |
-| `>=` `<=` | Greater or equal / less or equal |
-| `in` | Checks if a value exists in a list or string |
+| `==` | 等于 |
+| `!=` | 不等于 |
+| `>` `<` | 大于/小于 |
+| `>=` `<=` | 大于等于/小于等于 |
+| `in` | 检查值是否存在于列表或字符串 |
 
----
+## 循环
 
-## Loops
-
-**For loop** - iterate over a list or range:
+`for` 循环遍历列表或范围：
 
 ```python
 ports = [22, 80, 443]
 for port in ports:
     print(f"Checking port {port}")
-```
 
-```python
 for i in range(1, 256):
     print(f"192.168.1.{i}")
 ```
 
-`range(1, 256)` generates numbers from 1 to 255. This is how you'd build a basic IP range to scan.
+`range(1, 256)` 生成 1 到 255，可用于构建 IP 地址范围。
 
-**While loop** - keep going while a condition is true:
+`while` 循环在条件为真时继续：
 
 ```python
 attempts = 0
@@ -189,13 +138,11 @@ while attempts < 3:
 print("Too many attempts")
 ```
 
-`break` exits the loop immediately. `continue` skips to the next iteration.
+`break` 立即退出循环，`continue` 跳到下一轮。
 
----
+## 函数
 
-## Functions
-
-Functions let you write a block of code once and call it by name whenever you need it:
+函数让你只编写一次代码，再按名称调用：
 
 ```python
 def scan_port(ip, port):
@@ -203,11 +150,7 @@ def scan_port(ip, port):
 
 scan_port("192.168.1.1", 80)
 scan_port("192.168.1.1", 443)
-```
 
-Functions can return values:
-
-```python
 def add(a, b):
     return a + b
 
@@ -215,13 +158,9 @@ result = add(3, 4)
 print(result)    # 7
 ```
 
-Well-structured scripts put logic in functions and call them from the bottom of the file. It makes the code readable and reusable.
+结构良好的脚本会把逻辑放进函数，在文件底部调用它们，便于阅读和复用。
 
----
-
-## Importing libraries
-
-Python's real power comes from its libraries. You bring them in with `import`:
+## 导入库
 
 ```python
 import socket
@@ -229,7 +168,7 @@ import os
 import sys
 ```
 
-**socket** - for network connections, the foundation of network tools:
+`socket` 用于网络连接：
 
 ```python
 import socket
@@ -240,35 +179,27 @@ print("Connected")
 s.close()
 ```
 
-This opens a TCP connection to google.com on port 80 - the same thing a browser does when you visit a site over HTTP.
-
-**os** - for interacting with the operating system:
+`os` 用于操作系统交互：
 
 ```python
 import os
 
-os.system("ls -la")           # run a shell command
-cwd = os.getcwd()             # get current directory
-files = os.listdir(".")       # list files in current directory
+os.system("ls -la")           # 运行 shell 命令
+cwd = os.getcwd()              # 获取当前目录
+files = os.listdir(".")        # 列出当前目录文件
 ```
 
-**sys** - for system-level stuff like command-line arguments:
+`sys` 可读取命令行参数：
 
 ```python
 import sys
 
-print(sys.argv)               # list of arguments passed to the script
+print(sys.argv)
 # python3 script.py 192.168.1.1 80
 # sys.argv = ['script.py', '192.168.1.1', '80']
 ```
 
-This lets you pass arguments to your script when you run it, rather than hardcoding values.
-
----
-
-## Installing third-party libraries
-
-The standard library covers a lot, but the Python ecosystem has hundreds of thousands of third-party packages for specialized tasks:
+## 安装第三方库
 
 ```bash
 ahegazy0@kali:~$ pip3 install requests
@@ -276,11 +207,11 @@ ahegazy0@kali:~$ pip3 install scapy
 ahegazy0@kali:~$ pip3 install paramiko
 ```
 
-- `requests` - cleaner HTTP requests than using socket directly
-- `scapy` - powerful packet crafting and analysis
-- `paramiko` - SSH connections in Python
+- `requests`：比直接使用 socket 更方便地发 HTTP 请求
+- `scapy`：构造和分析数据包
+- `paramiko`：在 Python 中建立 SSH 连接
 
-Import after installing:
+使用示例：
 
 ```python
 import requests
@@ -290,11 +221,7 @@ print(response.status_code)
 print(response.text)
 ```
 
----
-
-## A practical example - basic port scanner
-
-This brings together most of what's above into something actually useful:
+## 实例：基础端口扫描器
 
 ```python
 #!/usr/bin/env python3
@@ -304,7 +231,7 @@ import sys
 def scan_port(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(1)
-    result = s.connect_ex((ip, port))   # returns 0 if connection succeeded
+    result = s.connect_ex((ip, port))   # 连接成功返回 0
     s.close()
     return result == 0
 
@@ -318,15 +245,11 @@ for port in range(1, 1025):
 print("\nScan complete.")
 ```
 
-`connect_ex` tries to connect and returns an error code rather than throwing an exception - 0 means success (port is open). `settimeout(1)` means don't wait more than 1 second per port before moving on.
+`connect_ex` 返回错误码而不是抛出异常，0 表示端口开放；`settimeout(1)` 让每个端口最多等待 1 秒。这是 nmap 的简化版本，只应扫描自己或得到明确授权的主机。
 
-This is a simplified version of what nmap does. Understanding it makes nmap's output make a lot more sense.
+## 错误处理
 
----
-
-## Error handling
-
-Things go wrong. Network connections fail, files don't exist, users type the wrong thing. Python uses `try/except` to handle this gracefully:
+网络连接会失败，文件可能不存在，用户也可能输入错误。使用 `try/except` 优雅处理：
 
 ```python
 try:
@@ -339,68 +262,58 @@ finally:
     s.close()
 ```
 
-`try` - attempt this
-`except` - if it fails, run this instead
-`finally` - run this no matter what (cleanup code goes here)
-
-Without error handling, one failed connection crashes the entire script. With it, your script keeps running and tells you what went wrong.
+`try` 尝试执行，`except` 在失败时处理，`finally` 无论结果如何都会执行清理代码。
 
 ---
 
-## Command Reference
+## 命令速查
 
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `python3 script.py` | Run a Python script |
-| `python3` | Open the interactive Python shell |
-| `pip3 install [package]` | Install a third-party library |
-| `pip3 list` | Show installed packages |
-| `pip3 show [package]` | Show details about an installed package |
+| `python3 script.py` | 运行 Python 脚本 |
+| `python3` | 打开交互式 Python |
+| `pip3 install [package]` | 安装第三方库 |
+| `pip3 list` | 查看已安装包 |
+| `pip3 show [package]` | 查看软件包详情 |
 
----
+## Python 速查表
 
-## Python cheat sheet
-
-| Concept | Syntax |
+| 概念 | 语法 |
 |---|---|
-| Print | `print("text")` |
-| Variable | `name = "value"` |
-| User input | `x = input("prompt: ")` |
-| String formatting | `f"Hello {name}"` |
+| 输出 | `print("text")` |
+| 变量 | `name = "value"` |
+| 用户输入 | `x = input("prompt: ")` |
+| 字符串格式化 | `f"Hello {name}"` |
 | If/else | `if x == y:` / `else:` |
-| For loop | `for item in list:` |
-| While loop | `while condition:` |
-| Function | `def name(params):` |
-| Import | `import socket` |
-| List | `items = [1, 2, 3]` |
-| Dictionary | `d = {"key": "value"}` |
+| For 循环 | `for item in list:` |
+| While 循环 | `while condition:` |
+| 函数 | `def name(params):` |
+| 导入 | `import socket` |
+| 列表 | `items = [1, 2, 3]` |
+| 字典 | `d = {"key": "value"}` |
 | Try/except | `try:` / `except Error as e:` |
 
+## 练习
+
+- [ ] 写一个询问姓名并用 f-string 打招呼的脚本
+- [ ] 循环遍历 20–25 端口并打印每个端口
+- [ ] 构建上面的端口扫描器，用 `127.0.0.1` 测试自己的机器
+- [ ] 写一个询问密码并根据硬编码值输出正确/错误的脚本
+- [ ] 为端口扫描器加入错误处理，确保网络错误不会中断整个扫描
+
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-## Practice
+## 后续方向
 
-- [ ] Write a script that asks for your name and prints a greeting using an f-string
-- [ ] Write a script that loops through ports 20–25 and prints each one
-- [ ] Build the port scanner above and test it against `127.0.0.1` (your own machine) - see which ports are open on yourself
-- [ ] Write a script that asks for a password and prints "correct" or "incorrect" based on a hardcoded value
-- [ ] Once you're comfortable with those: add error handling to the port scanner so a network error doesn't crash the whole scan
+- **Scapy**：构造和发送自定义数据包，编写数据包级扫描器和嗅探器
+- **Paramiko**：自动化 SSH 连接
+- **Requests + BeautifulSoup**：网页抓取和 HTTP 交互
+- **Subprocess**：从 Python 调用系统命令并获取输出
+- 阅读现有漏洞利用代码：GitHub 上许多 CVE 概念验证都是 Python，能够阅读和修改它们是非常实用的技能
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
----
-
-## Where to go from here
-
-This module is a foundation. The book ends here, but Python for security work goes much deeper:
-
-- **Scapy** - craft and send custom packets, build your own scanners and sniffers at the packet level
-- **Paramiko** - automate SSH connections, useful for scripting access to remote systems
-- **Requests + BeautifulSoup** - web scraping and HTTP interaction
-- **Subprocess** - call system commands from Python and capture their output
-- Reading existing exploit code - most CVE proof-of-concepts on GitHub are Python. Being able to read and modify them is one of the most practical skills in this field.
-
-The pattern going forward is the same as it's been throughout this course: understand the concept, run the commands, break things in your VM, and look things up when they don't work. That's how this stuff actually gets learned.
+学习方法始终相同：理解概念、运行命令、在虚拟机中安全地实验，遇到问题再查资料。
 
 ---
 
-*End of Linux Basics for Hackers - 17 Modules Complete.*
+*《Linux Basics for Hackers》结束——17 个模块全部完成。*

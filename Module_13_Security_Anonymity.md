@@ -1,173 +1,117 @@
-# Linux Basics for Hackers
-## Module 13 - Security & Anonymity
+# 黑客 Linux 基础
+## 模块 13：安全与匿名性
 
 ---
 
-## Overview
+## 概述
 
-Everything you do online leaves a trace. Every website you visit, every connection your machine makes - your real IP address is attached to it. This module is about understanding how that tracking works and how tools like Tor, proxies, VPNs, and proxychains reduce your exposure. This matters both for protecting yourself and for understanding the infrastructure that privacy-conscious people (and attackers) rely on.
+你在网上做的每件事都会留下痕迹。网站和服务器通常都能看到你的真实 IP。本模块介绍代理、Tor、VPN 和 proxychains 如何降低暴露面，也说明它们的局限。请只在合法、获得授权的环境中进行测试。
 
----
+## 为什么 IP 地址重要
 
-## Why your IP address matters
+IP 地址由 ISP 分配，每次连接互联网服务器都会携带它。目标服务器、ISP 以及所在网络都可能观察到你的连接和流量。匿名工具的作用，是在你和目标之间增加中间层，让目标看到另一个地址。
 
-Your IP address is assigned to you by your ISP. Every connection you make to any server on the internet carries it. The server you connect to can see it. Your ISP can see everything you connect to. Any network you're on can see your traffic.
+## 代理
 
-This is the problem anonymity tools solve - they put something between you and the destination so the destination sees a different IP, not yours.
-
----
-
-## Proxies
-
-A proxy is a server that sits between you and your destination. Instead of connecting directly to a website, you connect to the proxy, and the proxy connects to the website on your behalf. The website sees the proxy's IP, not yours.
+代理服务器位于你和目标之间：
 
 ```
-You → Proxy → Website
+你 → 代理 → 网站
 ```
 
-The website logs the proxy's IP address. Your ISP sees you connecting to the proxy but not what you did from there.
+网站看到代理的 IP，ISP 看到你连接了代理，但代理本身知道你的真实 IP 和目标。免费代理常常不适合敏感活动，可能是专门记录流量的蜜罐。
 
-Single proxies are the weakest form of anonymity. The proxy server itself knows your real IP and knows where you're going. If someone subpoenas that proxy or it keeps logs, your activity is traceable.
+## Tor：洋葱路由
 
-**Free proxies are almost always a bad idea** for anything sensitive. Many are run specifically to capture traffic - honeypots designed to log everything passing through them. If you wouldn't trust a random stranger to carry your mail, don't trust a random free proxy.
-
----
-
-## Tor - the onion router
-
-Tor routes your traffic through a chain of three servers called **nodes** or **relays**, each one run by volunteers around the world. Each relay only knows the step before it and the step after - no single relay knows both who you are and where you're going.
+Tor 将流量依次经过入口、中间和出口三个节点，每个节点只知道前后一步：
 
 ```
-You → Entry Node → Middle Node → Exit Node → Website
+你 → 入口节点 → 中间节点 → 出口节点 → 网站
 ```
 
-The encryption works in layers - like an onion. Your traffic is wrapped in three layers of encryption. Each node peels off one layer to find out where to send it next, but can't read the actual content or see the full path.
+流量被包裹成三层加密，每个节点剥开一层来决定下一跳，但无法看到完整路径。网站看到出口节点 IP，入口节点知道你的 IP 但不知道目的地，中间节点两者都不知道。
 
-The website sees the exit node's IP, not yours. The entry node knows your IP but doesn't know the destination. The middle node knows neither.
-
-**How to use it in Kali:**
+在 Kali 中：
 
 ```bash
 ahegazy0@kali:~$ apt install tor
 ahegazy0@kali:~$ service tor start
 ```
 
-Or download the Tor Browser, which is a pre-configured Firefox that routes all traffic through Tor automatically.
+Tor 会增加延迟，不适合高带宽或强时效活动；如果在 Tor 中登录个人账户，应用层身份仍会暴露。
 
-**The tradeoff:** Tor is slow. Three hops through volunteer servers around the world adds significant latency. It's not suitable for high-bandwidth activities or anything time-sensitive. It's also not a magic shield - poor operational security at the application layer (logging into a personal account, for example) defeats it completely.
+## Proxychains：让工具通过代理
 
----
-
-## Proxychains - forcing tools through proxies
-
-Tor and VPNs protect your browser traffic. But if you're running a terminal tool - `nmap`, `curl`, a custom script - that traffic goes out directly unless you route it through something.
-
-`proxychains` is a tool that intercepts network calls from any program and forces them through a configured chain of proxies. You put it in front of any command and the traffic gets redirected.
+浏览器流量经过 Tor 或 VPN，并不意味着终端工具也会经过。`proxychains` 会拦截程序的网络调用并强制它们经过配置的代理链：
 
 ```bash
 ahegazy0@kali:~$ proxychains nmap -sT 192.168.1.1
-```
-
-Now nmap's traffic routes through your proxy chain before reaching the target.
-
-**The config file:**
-
-```bash
 ahegazy0@kali:~$ nano /etc/proxychains.conf
 ```
 
-At the bottom you'll find the proxy list. Add proxies in this format:
+配置示例：
 
 ```
-socks5  127.0.0.1  9050    ← this is Tor's local port
+socks5  127.0.0.1  9050    ← Tor 本地端口
 socks4  10.0.0.1   1080
 http    203.0.113.5  3128
 ```
 
-If you add `127.0.0.1 9050` (Tor's default local port) and have Tor running, proxychains will route everything through Tor. Combined, this means even your terminal tools go through the Tor network.
+- `strict_chain`：必须按顺序经过所有代理，任何一个失效都会失败
+- `dynamic_chain`：自动跳过失效代理，使用可用代理
 
-**Two modes worth knowing in the config:**
+大多数场景下 `dynamic_chain` 更实用。
 
-- `strict_chain` - traffic must go through every proxy in order; if one is down, the connection fails
-- `dynamic_chain` - skips dead proxies automatically and uses whatever is available
+## VPN
 
-For most use cases `dynamic_chain` is more practical.
+VPN 在你和 VPN 服务器之间建立加密隧道：
+
+```
+你 → [加密隧道] → VPN 服务器 → 互联网
+```
+
+与 Tor 相比，VPN 更快，但服务商可以看到流量并知道你的真实 IP。应选择有审计支持的无日志政策的可信服务商。也有人组合使用 VPN + Tor：
+
+```
+你 → VPN → Tor 网络 → 网站
+```
+
+这样会增加更多延迟，且不能替代良好的操作安全。
+
+## 加密通信
+
+**ProtonMail** 提供端到端加密邮件，**Signal** 默认提供端到端加密并尽量减少元数据。记者、律师和处理敏感信息的人都可以使用这些工具；使用加密通信本身并不等于可疑。
+
+## 真正会破坏匿名性的因素
+
+- 使用 Tor 时登录 Google 或社交媒体等个人账户
+- 在匿名和非匿名活动中复用用户名
+- 浏览器指纹暴露操作系统、分辨率、字体和时区
+- 文件元数据暴露创建设备信息
+- 将敏感流量交给免费或未知代理
+
+匿名性是一种操作习惯，而不是安装一个工具就能获得的属性。
 
 ---
 
-## VPNs
+## 命令速查
 
-A VPN (Virtual Private Network) creates an encrypted tunnel between you and a VPN server. All your traffic travels through that tunnel, encrypted, before going out to the internet. Your ISP sees only that you're connected to a VPN - not what you're doing.
-
-```
-You → [encrypted tunnel] → VPN Server → Internet
-```
-
-Compared to Tor:
-- VPNs are faster
-- Only one server involved - the VPN provider can see your traffic and logs if they choose to
-- The VPN provider knows your real IP
-
-Reputable paid VPN providers with audited no-log policies are the standard choice. The key phrase is "no-log policy" - you want a provider that demonstrably does not keep records of what you do.
-
-**VPN + Tor combined** is the approach some people use for maximum layering:
-
-```
-You → VPN → Tor Network → Website
-```
-
-Your ISP sees VPN traffic. The VPN provider sees you connecting to Tor but not the destination. The Tor exit node has no idea who you are. The website sees the Tor exit node.
-
-The tradeoff is even more latency than Tor alone.
-
----
-
-## Encrypted communications
-
-Anonymizing your network traffic is one side of it. What you communicate also matters.
-
-**ProtonMail** is an email provider where emails are encrypted end-to-end. Messages between ProtonMail users are encrypted on the server in a way that ProtonMail itself cannot read them. Even under a court order, there's nothing to hand over because the keys only exist on the user's device.
-
-For general messaging, **Signal** operates on the same principle - end-to-end encryption by default, minimal metadata retained.
-
-These are standard tools for journalists, activists, lawyers, and anyone handling sensitive communications. Using encrypted communication is not inherently suspicious - it's basic operational hygiene.
-
----
-
-## What actually breaks anonymity
-
-Tools are only as good as how you use them. Most anonymity failures are at the human layer, not the technical layer:
-
-- Logging into a personal account (Google, social media) while using Tor - the account itself identifies you regardless of IP
-- Reusing usernames across anonymous and non-anonymous activities
-- Browser fingerprinting - your browser leaks information about your OS, screen resolution, installed fonts, timezone, etc. even without cookies
-- Metadata in files - documents and photos often contain embedded data about the device that created them
-- Trusting free or unknown proxies with sensitive traffic
-
-Anonymity is a practice, not just a tool you install.
-
----
-
-## Command Reference
-
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `service tor start` | Start the Tor service |
-| `proxychains [command]` | Run any command through your proxy chain |
-| `nano /etc/proxychains.conf` | Edit the proxychains configuration |
-| `curl ifconfig.me` | Check what IP address the internet sees |
-| `proxychains curl ifconfig.me` | Check your apparent IP through proxychains |
+| `service tor start` | 启动 Tor 服务 |
+| `proxychains [command]` | 让命令通过代理链运行 |
+| `nano /etc/proxychains.conf` | 编辑 proxychains 配置 |
+| `curl ifconfig.me` | 查看互联网看到的 IP |
+| `proxychains curl ifconfig.me` | 通过代理链查看表面 IP |
 
+## 练习
+
+- [ ] 在实验环境安装并启动 Tor，运行 `proxychains curl ifconfig.me`
+- [ ] 打开 `/etc/proxychains.conf`，了解 `socks5 127.0.0.1 9050` 配置
+- [ ] 直接访问 IP 查询网站，再用 Tor Browser 访问并比较
+- [ ] 了解 ProtonMail 或其他端到端加密通信工具
+
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-## Practice
-
-- [ ] Install and start Tor, then run `proxychains curl ifconfig.me` - the IP it returns should not be your real one
-- [ ] Open `/etc/proxychains.conf` and look at the configuration - add the Tor local port (`socks5 127.0.0.1 9050`) to the proxy list
-- [ ] Visit a "what is my IP" site directly, then through Tor Browser - compare the two IPs
-- [ ] Look into ProtonMail if you don't already have an account - it's free and worth using for anything sensitive
-
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
----
-
-*Up next: Module 14 - Wireless Networking*
+*下一篇：模块 14——无线网络*

@@ -1,216 +1,172 @@
-# Linux Basics for Hackers
-## Module 2 - Text Manipulation
+# 黑客 Linux 基础
+## 模块 2：文本处理
 
 ---
 
-## Overview
+## 概述
 
-In Linux, almost everything is a text file. System settings, logs, configs, user data - all text. Once you know how to search through and manipulate text, you can dig through thousands of lines of output and pull exactly what you need in seconds. That's the whole point of this module.
+在 Linux 中，系统设置、日志、配置和用户数据几乎都以文本文件存在。掌握搜索和处理文本的方法后，你可以从数千行输出中在几秒内找出需要的内容。
 
----
+## 这对黑客工作为什么重要
 
-## Why this matters for hacking
-
-When a scanning tool runs and produces output, it doesn't give you a clean summary. It dumps everything - thousands of lines. You're not reading that manually. You use text tools to filter it down to only what you care about. A real example: after scanning a network, you'd use `grep` to pull only the lines containing "open" to find open ports, ignoring everything else.
-
-Also, nearly every system configuration lives in a plain text file somewhere under `/etc`. If you can read and edit those files, you can reconfigure almost anything on the system.
+扫描工具通常会输出成千上万行内容，而不是一份整洁的摘要。你可以使用文本工具筛选结果，例如在扫描网络后用 `grep` 找出包含 “open” 的行，从而快速定位开放端口。`/etc` 下的系统配置也大多是纯文本文件，读写这些文件就能重新配置系统。
 
 ---
 
-## Essential Commands
+## 基本命令
 
 ### cat
 
-Short for "concatenate." The simplest way to read a file - it just dumps the entire contents to the screen.
+`cat` 是 concatenate（连接）的缩写，是读取文件最直接的方式：它会把全部内容输出到屏幕。
 
 ```bash
 ahegazy0@kali:~$ cat /etc/passwd
 ```
 
-> **Gotcha:** Never run `cat` on a compiled binary file (like `cat /bin/ls`). It dumps raw bytecode to your screen and scrambles your terminal font into unreadable alien symbols. If this happens, type `reset` blindly and hit Enter.
+> **注意：** 不要对编译后的二进制文件运行 `cat`（例如 `cat /bin/ls`），否则原始字节会把终端弄得一团糟。若发生这种情况，盲打 `reset` 并按回车即可恢复。
 
-Also useful for creating small files quickly:
+也可以快速创建小文件：
 
 ```bash
 ahegazy0@kali:~$ cat > targets.txt
 ```
 
-After running that, type your content line by line. When done, press `Ctrl+D` to save and exit. Whatever you typed is now in `targets.txt`.
-
-To add content to an existing file without overwriting it, use `>>` instead:
+逐行输入内容，完成后按 `Ctrl+D` 保存并退出。若要追加而不是覆盖，使用 `>>`：
 
 ```bash
 ahegazy0@kali:~$ cat >> targets.txt
 ```
 
-The difference between `>` and `>>` is important. `>` overwrites. `>>` appends.
-
----
+`>` 会覆盖，`>>` 会追加，这个区别非常重要。
 
 ### grep
 
-This is the one you'll use the most. `grep` searches through a file and returns only the lines that contain a specific word or pattern.
+`grep` 会搜索文件，只返回包含指定文字或模式的行。
 
 ```bash
 ahegazy0@kali:~$ grep "password" logs.txt
 ```
 
-Returns every line in `logs.txt` that contains the word "password."
+常用选项：
 
-Useful options:
-
-| Option | What it does |
+| 选项 | 作用 |
 |---|---|
-| `-i` | Case-insensitive search (finds "Password", "PASSWORD", etc.) |
-| `-r` | Search recursively through all files in a folder |
-| `-n` | Show line numbers alongside results |
-| `-v` | Invert - show lines that do NOT contain the word |
+| `-i` | 忽略大小写（同时匹配 `Password`、`PASSWORD` 等） |
+| `-r` | 递归搜索文件夹中的所有文件 |
+| `-n` | 同时显示行号 |
+| `-v` | 反向匹配，显示不包含目标文字的行 |
 
-Example:
+示例：
+
 ```bash
 ahegazy0@kali:~$ grep -i "admin" access.log
 ```
 
-Finds "admin", "Admin", "ADMIN" - all of them.
+这会同时找出 `admin`、`Admin` 和 `ADMIN`。
 
----
+### head 和 tail
 
-### head and tail
-
-When a file is huge and you only want a small piece of it:
+文件很大、只想查看一小部分时，可以使用：
 
 ```bash
 ahegazy0@kali:~$ head /etc/snort/snort.conf
-```
-
-Shows the first 10 lines by default.
-
-```bash
 ahegazy0@kali:~$ tail /var/log/syslog
 ```
 
-Shows the last 10 lines by default.
-
-To control how many lines you get:
+默认分别显示前 10 行和后 10 行，也可以指定行数：
 
 ```bash
-ahegazy0@kali:~$ head -n 20 file.txt     first 20 lines
-ahegazy0@kali:~$ tail -n 20 file.txt     last 20 lines
+ahegazy0@kali:~$ head -n 20 file.txt     前 20 行
+ahegazy0@kali:~$ tail -n 20 file.txt     后 20 行
 ```
 
-`tail` has one especially useful trick - the `-f` flag, which follows a file in real time:
+`tail -f` 会实时跟踪文件新增内容，适合观察正在写入的日志：
 
 ```bash
 ahegazy0@kali:~$ tail -f /var/log/syslog
 ```
 
-This keeps the terminal open and shows new lines as they're added to the file. Useful for watching logs live while something is running.
-
----
-
 ### nl
 
-Adds line numbers to a file's output. Handy when you need to reference specific lines.
+给输出添加行号，便于引用具体行：
 
 ```bash
 ahegazy0@kali:~$ nl /etc/snort/snort.conf
 ```
 
----
-
 ### less
 
-When a file is too long to read with `cat` (it just blasts past you), use `less` instead. It lets you scroll through the file one page at a time.
+文件太长时，不要用 `cat` 让内容一闪而过，使用 `less` 逐页查看：
 
 ```bash
 ahegazy0@kali:~$ less /etc/snort/snort.conf
 ```
 
-Controls:
-- `Space` - next page
-- `b` - previous page
-- `/word` - search for a word
-- `q` - quit
-
----
+- `Space`：下一页
+- `b`：上一页
+- `/word`：搜索文字
+- `q`：退出
 
 ### sed
 
-Short for "stream editor." It finds a word or pattern in a file and replaces it with something else.
+`sed` 是流编辑器，可查找并替换文本：
 
 ```bash
 ahegazy0@kali:~$ sed 's/mysql/MySQL/g' config.txt
 ```
 
-Breaking that down:
-- `s/` - substitute
-- `mysql` - find this
-- `/MySQL/` - replace with this
-- `g` - do it globally (every occurrence, not just the first)
-
-By default, `sed` only prints the modified output - it doesn't actually change the file. To save the changes back to the file, add `-i`:
-
-```bash
-ahegazy0@kali:~$ sed -i 's/mysql/MySQL/g' config.txt
-```
-
-> Before using `-i`, make a backup. `sed -i` modifies files permanently and there's no undo.
+其中 `s/` 表示替换，`mysql` 是查找内容，`/MySQL/` 是替换内容，`g` 表示替换每一处而不是只替换第一处。默认情况下 `sed` 只打印修改后的结果，不会修改文件。加上 `-i` 才会写回文件：
 
 ```bash
 ahegazy0@kali:~$ cp config.txt config.txt.bak
 ahegazy0@kali:~$ sed -i 's/old/new/g' config.txt
 ```
 
+> 使用 `-i` 前先备份。它会永久修改文件，不能撤销。
+
 ---
 
-## The pipe - connecting commands together
+## 管道：连接多个命令
 
-The pipe `|` takes the output of one command and feeds it directly into another. This is where things get powerful.
+管道符 `|` 会把一个命令的输出直接交给另一个命令。这是组合命令的关键能力。
 
-![Linux Pipeline Diagram](assets/linux_pipe_diagram_1789213616381.jpg)
+![Linux 管道示意图](assets/linux_pipe_diagram_1789213616381.jpg)
 
 ```bash
 ahegazy0@kali:~$ cat access.log | grep "failed"
-```
-
-Instead of reading the whole log, you only see the lines containing "failed."
-
-You can chain as many pipes as you want:
-
-```bash
 ahegazy0@kali:~$ cat access.log | grep "failed" | tail -n 20
 ```
 
-That reads the log, filters for "failed", then shows only the last 20 of those filtered lines. Three commands, one line.
+第二条命令先读取日志，再筛选 `failed`，最后只显示筛选结果中的最后 20 行。多个命令可以串成一条流水线。
 
 ---
 
-## Command Reference
+## 命令速查
 
-| Command | What it does | Example |
+| 命令 | 作用 | 示例 |
 |---|---|---|
-| `cat file` | Print entire file to screen | `cat /etc/passwd` |
-| `cat > file` | Create a file and type into it | `cat > notes.txt` |
-| `grep "word" file` | Find lines containing a word | `grep "root" passwd` |
-| `grep -i` | Case-insensitive search | `grep -i "admin" log` |
-| `head -n 20 file` | First 20 lines | `head -n 20 file.txt` |
-| `tail -n 20 file` | Last 20 lines | `tail -n 20 file.txt` |
-| `tail -f file` | Follow file in real time | `tail -f syslog` |
-| `nl file` | Show file with line numbers | `nl config.conf` |
-| `less file` | Scroll through a file | `less bigfile.txt` |
-| `sed 's/a/b/g' file` | Replace all "a" with "b" | `sed 's/old/new/g' f` |
-| `cmd1 \| cmd2` | Pipe output of cmd1 into cmd2 | `cat log \| grep fail` |
+| `cat file` | 将整个文件打印到屏幕 | `cat /etc/passwd` |
+| `cat > file` | 创建文件并输入内容 | `cat > notes.txt` |
+| `grep "word" file` | 查找包含指定文字的行 | `grep "root" passwd` |
+| `grep -i` | 忽略大小写搜索 | `grep -i "admin" log` |
+| `head -n 20 file` | 查看前 20 行 | `head -n 20 file.txt` |
+| `tail -n 20 file` | 查看后 20 行 | `tail -n 20 file.txt` |
+| `tail -f file` | 实时跟踪文件 | `tail -f syslog` |
+| `nl file` | 显示带行号的文件 | `nl config.conf` |
+| `less file` | 分页浏览文件 | `less bigfile.txt` |
+| `sed 's/a/b/g' file` | 将所有 `a` 替换为 `b` | `sed 's/old/new/g' f` |
+| `cmd1 \| cmd2` | 将 cmd1 输出交给 cmd2 | `cat log \| grep fail` |
 
 ---
 
-## Practice
+## 练习
 
-- [ ] Go to `/etc/snort/` and open `snort.conf` with `less` - scroll through it to get a feel for what a config file looks like
-- [ ] Use `grep "output" /etc/snort/snort.conf` and see which lines come back
-- [ ] Use `cat > targets.txt`, type three IP addresses (one per line), then press `Ctrl+D` - then read it back with `cat targets.txt`
-- [ ] Try chaining: `cat /etc/snort/snort.conf | grep "output" | nl`
+- [ ] 进入 `/etc/snort/`，用 `less` 打开 `snort.conf`，熟悉配置文件的样子
+- [ ] 运行 `grep "output" /etc/snort/snort.conf`，观察返回的行
+- [ ] 使用 `cat > targets.txt` 输入三个 IP 地址（每行一个），按 `Ctrl+D` 后用 `cat targets.txt` 读回
+- [ ] 尝试组合：`cat /etc/snort/snort.conf | grep "output" | nl`
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-*Up next: Module 3 - Managing Networks*
+*下一篇：模块 3——网络管理*

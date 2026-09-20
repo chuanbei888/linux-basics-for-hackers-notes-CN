@@ -1,195 +1,195 @@
-# Linux Basics for Hackers
-## Module 1 - The Basics of the Terminal
+# 黑客 Linux 基础
+## 模块 1：终端基础
 
 ---
 
-## Overview
+## 概述
 
-In Windows you click things. In Linux you type things. That's the shift this module is about. The terminal is where you'll spend most of your time as a hacker, and every tool you'll eventually use runs through it. There's no skipping this.
-
----
-
-## What the terminal actually is
-
-The terminal is a text window where you give the computer direct instructions and it responds. No icons, no menus, no mouse required. Just you typing and the system doing exactly what you said.
-
-Most hacking tools have no graphical interface at all - no buttons, no windows, nothing to click. If you can't use the terminal, you can't use the tools. It's that simple.
-
-It's worth thinking of the terminal as a conversation with your computer. Instead of hunting for a folder and double-clicking it, you just type where you want to go and you're there instantly. It feels slow at first and then one day it feels faster than any GUI you've used.
+在 Windows 中你通过点击操作，在 Linux 中你通过输入命令操作。本模块要讲的就是这种转变。作为黑客，你大部分时间都会在终端中度过，今后使用的每个工具也都会通过终端运行。这一部分无法跳过。
 
 ---
 
-## The Linux filesystem - the upside-down tree
+## 终端究竟是什么
 
-Linux stores everything in a single structure that branches out from one starting point at the top. That starting point is called **root**, and it's written as `/` - just a forward slash.
+终端是一个文本窗口，你可以直接向电脑下达指令，电脑会作出响应。不需要图标、菜单或鼠标，只需要你输入内容，系统就会准确执行你的命令。
 
-Everything on the system - files, folders, programs, settings - lives somewhere inside that tree.
+大多数黑客工具根本没有图形界面：没有按钮、没有窗口，也没有可点击的东西。不会使用终端，就无法使用这些工具。就是这么简单。
 
-![Linux Filesystem Hierarchy](assets/linux_filesystem_tree_1789211965428.jpg)
+可以把终端理解为你和电脑之间的对话。你不必寻找文件夹再双击它，只需输入想去的位置，马上就能到达。刚开始可能觉得慢，但总有一天你会发现它比用过的任何图形界面都快。
+
+---
+
+## Linux 文件系统：一棵倒置的树
+
+Linux 将所有内容存储在一个从顶部起点向外分支的结构中。这个起点叫作 **root**，写作 `/`，也就是一个正斜杠。
+
+系统中的一切——文件、文件夹、程序和设置——都位于这棵树中的某个位置。
+
+![Linux 文件系统层次结构](assets/linux_filesystem_tree_1789211965428.jpg)
 
 ```
 /
-├── etc/        system settings and config files
-├── bin/        essential built-in programs
-├── home/       personal folders for each user
-│   └── kali/   your home folder
-├── root/       home folder for the root (admin) user
-├── var/        logs and data that changes constantly
-├── tmp/        temporary files, wiped on every reboot
-└── usr/        installed software and applications
+├── etc/        系统设置和配置文件
+├── bin/        必要的内置程序
+├── home/       每个用户的个人文件夹
+│   └── kali/   你的主目录
+├── root/       root（管理员）用户的主目录
+├── var/        不断变化的日志和数据
+├── tmp/        临时文件，每次重启都会清除
+└── usr/        已安装的软件和应用程序
 ```
 
-If you're coming from Windows: Windows uses `C:\Users\YourName\` as your home. Linux uses `/home/yourname/`. Same idea, different syntax.
+如果你来自 Windows：Windows 使用 `C:\Users\YourName\` 作为主目录，Linux 使用 `/home/yourname/`。概念相同，只是语法不同。
 
-The important folders to remember right now:
+现在需要记住的几个重要文件夹：
 
-| Folder | What's inside |
+| 文件夹 | 内容 |
 |---|---|
-| `/` | The root - the top of everything |
-| `/etc` | Config files - system settings live here |
-| `/bin` | Basic programs the system needs to run |
-| `/home` | Personal folders for regular users |
-| `/root` | Home folder for the root user specifically |
-| `/tmp` | Temporary files - cleared every reboot |
+| `/` | 根目录，一切内容的顶层 |
+| `/etc` | 配置文件，系统设置存放在这里 |
+| `/bin` | 系统运行所需的基本程序 |
+| `/home` | 普通用户的个人文件夹 |
+| `/root` | root 用户专用的主目录 |
+| `/tmp` | 临时文件，每次重启都会清除 |
 
 ---
 
-## Essential Commands
+## 基本命令
 
 ### pwd
 
-Stands for "Print Working Directory." Tells you exactly where you are in the filesystem right now.
+代表“Print Working Directory”（打印工作目录），准确告诉你当前位于文件系统中的什么位置。
 
 ```bash
 ahegazy0@kali:~$ pwd
 /home/kali
 ```
 
-You're in the `kali` folder, inside `home`, at the root of the system. Use this whenever you feel lost.
+你位于 `home` 下的 `kali` 文件夹中，也就是系统根目录下的 `/home/kali`。迷路时就使用它。
 
 ---
 
 ### ls
 
-Stands for "List." Shows you what's inside your current folder.
+代表“List”（列出），显示当前文件夹中的内容。
 
 ```bash
 ahegazy0@kali:~$ ls
 Desktop  Documents  Downloads  Pictures
 ```
 
-The useful variations:
+常用变体：
 
-| Command | What changes |
+| 命令 | 变化 |
 |---|---|
-| `ls` | Basic list |
-| `ls -l` | Detailed list with permissions, size, and date |
-| `ls -a` | Shows hidden files too |
-| `ls -la` | Detailed list including hidden files |
+| `ls` | 基本列表 |
+| `ls -l` | 显示权限、大小和日期等详细信息 |
+| `ls -a` | 同时显示隐藏文件 |
+| `ls -la` | 显示包含隐藏文件的详细列表 |
 
-Hidden files in Linux start with a dot - like `.bashrc` or `.config`. They don't show up with a plain `ls`. Use `ls -la` when you need to see everything, and you'll use it often.
+Linux 中的隐藏文件以点号开头，例如 `.bashrc` 或 `.config`。普通 `ls` 不会显示它们。需要查看全部内容时使用 `ls -la`，你会经常用到它。
 
 ---
 
 ### cd
 
-Stands for "Change Directory." This is how you move around.
+代表“Change Directory”（切换目录），用于在文件系统中移动。
 
 ```bash
 ahegazy0@kali:~$ cd /etc
 ```
 
-Goes straight to `/etc`.
+这会直接进入 `/etc`。
 
-The shortcuts worth memorizing:
+值得记住的快捷用法：
 
-| Command | Where it takes you |
+| 命令 | 作用 |
 |---|---|
-| `cd /path` | Straight to whatever path you type |
-| `cd ..` | Up one level to the parent folder |
-| `cd ~` | Straight to your home folder |
-| `cd /` | All the way to the root |
-| `cd -` | Back to the previous folder you were in |
+| `cd /path` | 直接进入你输入的路径 |
+| `cd ..` | 向上返回一级父目录 |
+| `cd ~` | 直接进入你的主目录 |
+| `cd /` | 一路返回根目录 |
+| `cd -` | 返回上一个所在目录 |
 
-`cd ..` is the one you'll use constantly. If you're deep in the tree and want to climb back up, keep typing `cd ..` until you're where you want to be.
+`cd ..` 是你会一直使用的命令。如果你深入了文件树，想逐层返回，就不断输入 `cd ..`，直到到达目标位置。
 
 ---
 
 ### man
 
-Stands for "Manual." Every command in Linux has a built-in manual page that explains what it does and lists every option available.
+代表“Manual”（手册）。Linux 中每条命令都有内置手册页，说明命令的作用并列出所有可用选项。
 
 ```bash
 ahegazy0@kali:~$ man ls
 ```
 
-Opens the full manual for `ls`.
+打开 `ls` 的完整手册。
 
-Inside the manual:
-- Scroll down with `j` or the down arrow
-- Scroll up with `k` or the up arrow
-- Search for a word by pressing `/` then typing it
-- Quit by pressing `q`
+在手册中：
+- 使用 `j` 或向下箭头向下滚动
+- 使用 `k` 或向上箭头向上滚动
+- 按 `/` 后输入文字来搜索
+- 按 `q` 退出
 
-When you encounter a tool you've never used before, `man toolname` is always the first thing to run. The answer is usually in there.
+遇到从未使用过的工具时，`man 工具名` 总是应该首先运行的命令，答案通常就在里面。
 
 ---
 
 ### whoami
 
-Shows you which user you're currently logged in as.
+显示当前登录的用户。
 
 ```bash
 ahegazy0@kali:~$ whoami
 kali
 ```
 
-Or if you're running as the admin:
+如果你以管理员身份运行，则会显示：
 ```
 root
 ```
 
-This matters a lot later. Some commands require root access and won't work as a regular user. Knowing what account you're on saves a lot of confusion.
+这一点在后面很重要。有些命令需要 root 权限，普通用户无法运行。知道当前使用的账户可以避免很多困惑。
 
 ---
 
 ### locate
 
-Searches the entire filesystem for a file by name.
+按文件名在整个文件系统中搜索文件。
 
 ```bash
 ahegazy0@kali:~$ locate nmap
 ```
 
-Finds every file on the system with "nmap" in its name, instantly.
+它会立即找出系统中名称包含 “nmap” 的所有文件。
 
-One thing to know: `locate` works from a pre-built database, not by scanning the disk in real time. If you installed something recently and `locate` can't find it, update the database first:
+需要注意：`locate` 使用预先构建的数据库，而不是实时扫描磁盘。如果刚安装某个软件但 `locate` 找不到它，请先更新数据库：
 
 ```bash
 ahegazy0@kali:~$ updatedb
 ```
 
-This requires root access. Run it once and then `locate` will be up to date.
+这需要 root 权限。运行一次后，`locate` 就会得到最新数据。
 
-> **Gotcha:** `locate` won't find files in your `/root/` directory unless you run it as the root user. If you are a normal user, it pretends those files don't exist.
+> **注意：** 除非以 root 用户运行，否则 `locate` 不会找到 `/root/` 目录中的文件。普通用户使用时，它会假装这些文件不存在。
 
 ---
 
-## The one rule you can't forget
+## 绝不能忘记的一条规则
 
-**Linux is case-sensitive.** This trips up almost every beginner.
+**Linux 区分大小写。** 这几乎会让每个初学者都踩坑。
 
 ```bash
-ahegazy0@kali:~$ cd Desktop     works
-ahegazy0@kali:~$ cd desktop     error - no such file
-ahegazy0@kali:~$ cd DESKTOP     error - no such file
+ahegazy0@kali:~$ cd Desktop     正常
+ahegazy0@kali:~$ cd desktop     错误：没有此文件
+ahegazy0@kali:~$ cd DESKTOP     错误：没有此文件
 ```
 
-`Desktop`, `desktop`, and `DESKTOP` are three completely different things as far as Linux is concerned. Always watch your capitalization.
+对 Linux 而言，`Desktop`、`desktop` 和 `DESKTOP` 是三个完全不同的名称。始终注意大小写。
 
 ---
 
-## How navigation looks in practice
+## 实际导航示例
 
 ```
 /
@@ -198,43 +198,43 @@ ahegazy0@kali:~$ cd DESKTOP     error - no such file
         ├── Desktop/
         └── Downloads/
 
-You're at /home/kali. You want to get to Desktop:
-  cd Desktop             one step down
-  cd ..                  back to /home/kali
-  cd ../..               back to /home
-  cd /                   jump straight to root from anywhere
-  cd ~                   jump straight to /home/kali from anywhere
+你位于 /home/kali，想进入 Desktop：
+  cd Desktop             向下进入一级
+  cd ..                  返回 /home/kali
+  cd ../..               返回 /home
+  cd /                   从任意位置直接跳到根目录
+  cd ~                   从任意位置直接跳到 /home/kali
 ```
 
 ---
 
-## Command Reference
+## 命令速查
 
-| Command | What it does | Example |
+| 命令 | 作用 | 示例 |
 |---|---|---|
-| `pwd` | Shows current location | `pwd` |
-| `ls` | Lists files in current folder | `ls` |
-| `ls -la` | Lists everything including hidden files | `ls -la` |
-| `cd /path` | Go to a folder | `cd /etc` |
-| `cd ..` | Go up one level | `cd ..` |
-| `cd ~` | Go to home folder | `cd ~` |
-| `man cmd` | Open the manual for a command | `man ls` |
-| `whoami` | Shows which user you are | `whoami` |
-| `locate file` | Find a file anywhere on the system | `locate nmap` |
-| `updatedb` | Refresh the locate database | `updatedb` |
+| `pwd` | 显示当前位置 | `pwd` |
+| `ls` | 列出当前文件夹中的文件 | `ls` |
+| `ls -la` | 列出包含隐藏文件的全部内容 | `ls -la` |
+| `cd /path` | 进入文件夹 | `cd /etc` |
+| `cd ..` | 向上返回一级 | `cd ..` |
+| `cd ~` | 进入主目录 | `cd ~` |
+| `man cmd` | 打开命令手册 | `man ls` |
+| `whoami` | 显示当前用户 | `whoami` |
+| `locate file` | 在系统任意位置查找文件 | `locate nmap` |
+| `updatedb` | 刷新 locate 数据库 | `updatedb` |
 
 ---
 
-## Practice
+## 练习
 
-- [ ] Open the terminal and run `pwd` - see where you start
-- [ ] Run `cd /` then `ls` - you're at the root, look at what's there
-- [ ] Run `cd ~` then `ls -la` - spot the hidden files starting with `.`
-- [ ] Run `man nmap`, scroll through it, and exit with `q`
+- [ ] 打开终端并运行 `pwd`，看看你的起始位置
+- [ ] 运行 `cd /` 后执行 `ls`，你已位于根目录，看看里面有什么
+- [ ] 运行 `cd ~` 后执行 `ls -la`，找出以 `.` 开头的隐藏文件
+- [ ] 运行 `man nmap`，浏览手册并按 `q` 退出
 
-The goal isn't to memorize all of this right now. It's to get your hands moving and start feeling comfortable in the terminal. The commands will stick on their own the more you use them.
+现在不需要记住所有内容。目标是动手操作，逐渐适应终端。使用得越多，这些命令就会自然记住。
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-*Up next: Module 2 - Text Manipulation*
+*下一篇：模块 2——文本处理*

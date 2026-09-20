@@ -1,60 +1,41 @@
-# Linux Basics for Hackers
-## Module 15 - The Kernel & Loadable Kernel Modules
+# 黑客 Linux 基础
+## 模块 15：内核与可加载内核模块
 
 ---
 
-## Overview
+## 概述
 
-The kernel is the core of the operating system. Everything else - your terminal, your programs, your filesystem - sits on top of it. This module is about understanding what the kernel does, how to inspect and adjust its settings, and how modules work as a way to extend kernel functionality without rebooting.
+内核是操作系统的核心，终端、程序和文件系统都运行在它之上。本模块介绍内核的职责、如何查看和调整设置，以及如何在不重启的情况下使用模块扩展内核功能。
 
----
+## 内核究竟做什么
 
-## What the kernel actually does
+软件需要读文件、发网络数据或绘制屏幕时，不会直接操作硬件，而是请求内核完成。内核运行在**内核空间**，与程序所在的**用户空间**隔离；用户空间进程只能执行内核允许的操作，而内核可以访问任意内存和硬件，因此内核代码拥有系统最高权限。
 
-The kernel sits between your software and your hardware. When a program wants to read a file, send data over the network, or draw something on the screen, it doesn't talk to the hardware directly - it asks the kernel, and the kernel handles it.
+![Linux 内核架构](assets/linux_kernel_architecture_1789213639316.jpg)
 
-This makes the kernel the most privileged piece of software on the entire system. It runs in what's called **kernel space**, which is completely separate from the **user space** where your programs run. A process in user space can only do what the kernel allows. The kernel itself has no such restrictions - it can access any memory, any hardware, anything.
-
-This is also why it's such a target. Code running in the kernel runs with absolute authority over the machine.
-
-![Linux Kernel Architecture](assets/linux_kernel_architecture_1789213639316.jpg)
-
----
-
-## Checking your kernel version
+## 查看内核版本
 
 ```bash
 ahegazy0@kali:~$ uname -a
 Linux kali 6.1.0-kali9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1kali1 x86_64 GNU/Linux
 ```
 
-Reading this from left to right:
-- `Linux` - the OS
-- `kali` - the hostname
-- `6.1.0-kali9-amd64` - the kernel version and architecture
-- `x86_64` - confirms this is a 64-bit kernel
+- `Linux`：操作系统
+- `kali`：主机名
+- `6.1.0-kali9-amd64`：内核版本和架构
+- `x86_64`：64 位内核
 
-The architecture part (`x86_64` vs `i686`) is how you tell 64-bit from 32-bit.
+## 可加载内核模块（LKM）
 
----
+每增加一种硬件都重新编译内核并不现实，因此 Linux 支持在运行期间插入和移除的内核代码块。驱动就是常见例子：插入 USB Wi-Fi 适配器时，内核加载驱动；拔出后可以移除模块。
 
-## Loadable Kernel Modules (LKMs)
+模块运行在内核空间，拥有与内核相同的权限。恶意模块可能拦截系统调用、隐藏进程或文件，因此必须只从可信来源加载模块，并审计系统中的异常模块。
 
-The kernel can't be recompiled and replaced every time you need to support a new piece of hardware. Instead, it supports **loadable kernel modules** - chunks of kernel code that can be inserted and removed while the system is running, without a reboot.
-
-Drivers are the most common example. When you plug in a USB Wi-Fi adapter, the kernel loads the appropriate driver module to communicate with it. When you unplug it, the module can be removed. The kernel itself doesn't change - the module just extends it temporarily.
-
-Because modules run in kernel space, they have the same absolute authority as the kernel itself. This is why they're also used to hide rootkits - malicious code inserted as a module can intercept system calls, hide processes, hide files, and do it all from a level the OS itself can't easily inspect.
-
----
-
-## Listing loaded modules
+## 列出已加载模块
 
 ```bash
 ahegazy0@kali:~$ lsmod
 ```
-
-Shows every module currently loaded into the kernel:
 
 ```
 Module                  Size  Used by
@@ -63,143 +44,79 @@ snd_hda_intel         57344  3
 usbcore              286720  5 btusb,xhci_hcd
 ```
 
-The columns are:
-- `Module` - the module name
-- `Size` - how much memory it's using
-- `Used by` - other modules or processes depending on it
+- `Module`：模块名
+- `Size`：占用内存
+- `Used by`：依赖它的模块或进程
 
-You'll typically see dozens of modules loaded. Most are hardware drivers - audio, USB, display, network.
-
----
-
-## Getting information about a module
+## 查看、加载和移除模块
 
 ```bash
 ahegazy0@kali:~$ modinfo bluetooth
-```
-
-Output includes:
-- `filename` - where the module file lives on disk
-- `description` - what it does
-- `author` - who wrote it
-- `depends` - other modules it requires to function
-- `vermagic` - which kernel version it was compiled for
-
-The `depends` field is particularly useful. Modules often have dependencies - other modules that must be loaded first. `modinfo` shows you that chain.
-
----
-
-## Loading and removing modules
-
-**Add a module:**
-
-```bash
 ahegazy0@kali:~$ modprobe bluetooth
-```
-
-`modprobe` is the right tool for this. Unlike `insmod` (the lower-level alternative), modprobe automatically resolves and loads any dependencies the module needs. If `bluetooth` requires two other modules to be loaded first, modprobe handles that automatically.
-
-**Remove a module:**
-
-```bash
 ahegazy0@kali:~$ modprobe -r bluetooth
 ```
 
-The `-r` flag removes it. Again, modprobe handles dependencies - it won't remove a module that something else still depends on.
+`modinfo` 会显示文件路径、描述、作者、依赖和适用内核版本。`modprobe` 会自动处理依赖，`-r` 用于移除模块。
 
----
+## sysctl：运行时调整内核设置
 
-## sysctl - adjusting kernel settings at runtime
-
-The kernel exposes a large number of configurable settings through a virtual filesystem at `/proc/sys`. The `sysctl` command lets you read and change these settings while the system is running.
-
-**View all current kernel settings:**
+内核通过 `/proc/sys` 暴露许多参数，`sysctl` 可以读取和修改：
 
 ```bash
 ahegazy0@kali:~$ sysctl -a
-```
-
-That's a long list. To look at a specific one:
-
-```bash
 ahegazy0@kali:~$ sysctl net.ipv4.ip_forward
 net.ipv4.ip_forward = 0
-```
-
-This particular setting - IP forwarding - controls whether the system will forward network packets from one interface to another. By default it's off. When it's off, your machine receives a packet, decides it's not addressed to itself, and drops it.
-
-**Turn on IP forwarding:**
-
-```bash
 ahegazy0@kali:~$ sysctl -w net.ipv4.ip_forward=1
+ahegazy0@kali:~$ sysctl -p
 ```
 
-The `-w` flag means "write." Now the kernel will forward packets between interfaces. This is required for Man-in-the-Middle setups - your machine needs to be in the middle of traffic flow, receiving packets meant for someone else and forwarding them onward.
-
-**Making a sysctl change permanent:**
-
-Like environment variables, `sysctl -w` only lasts until the next reboot. To make it permanent, add it to `/etc/sysctl.conf`:
+`net.ipv4.ip_forward` 控制系统是否转发网络包，默认关闭。`sysctl -w` 的修改只持续到重启；要永久保存，可在 `/etc/sysctl.conf` 写入：
 
 ```
 net.ipv4.ip_forward = 1
 ```
 
-Then apply without rebooting:
+错误的内核参数可能造成网络故障或系统不稳定，修改前必须确认含义，并在授权实验环境中操作。
 
-```bash
-ahegazy0@kali:~$ sysctl -p
-```
+## /proc 文件系统
 
-**Be careful with sysctl.** Some settings control fundamental kernel behavior. Changing the wrong value can cause network problems, instability, or worse. Always know what a setting does before changing it.
-
----
-
-## The /proc filesystem
-
-Worth knowing alongside sysctl - `/proc` is a virtual filesystem that exists only in memory. It's the kernel exposing information about itself and running processes in file form.
+`/proc` 是只存在于内存中的虚拟文件系统，内核把自身和进程信息以文件形式暴露出来：
 
 ```bash
 ahegazy0@kali:~$ ls /proc
-```
-
-You'll see numbered directories - one for each running process (the number is the PID). You'll also see files like `cpuinfo`, `meminfo`, and `version` that expose hardware and kernel data.
-
-```bash
 ahegazy0@kali:~$ cat /proc/cpuinfo
 ahegazy0@kali:~$ cat /proc/meminfo
 ahegazy0@kali:~$ cat /proc/version
 ```
 
-These are not real files on disk. They're generated on the fly by the kernel every time you read them. This is the "everything is a file" philosophy taken to its logical conclusion - even dynamic kernel data is presented as files.
+其中的数字目录对应进程 PID，`cpuinfo`、`meminfo` 等文件由内核实时生成，并非磁盘上的普通文件。
 
 ---
 
-## Command Reference
+## 命令速查
 
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `uname -a` | Show full kernel version and architecture |
-| `lsmod` | List all currently loaded kernel modules |
-| `modinfo [name]` | Show details about a module |
-| `modprobe [name]` | Load a module (and its dependencies) |
-| `modprobe -r [name]` | Remove a module |
-| `sysctl -a` | Show all kernel parameters |
-| `sysctl [parameter]` | Show a specific kernel parameter |
-| `sysctl -w [param=value]` | Change a kernel parameter at runtime |
-| `sysctl -p` | Apply changes from /etc/sysctl.conf |
-| `cat /proc/cpuinfo` | CPU information from the kernel |
-| `cat /proc/meminfo` | Memory information from the kernel |
+| `uname -a` | 显示完整内核版本和架构 |
+| `lsmod` | 列出已加载模块 |
+| `modinfo [name]` | 查看模块详情 |
+| `modprobe [name]` | 加载模块及依赖 |
+| `modprobe -r [name]` | 移除模块 |
+| `sysctl -a` | 显示全部内核参数 |
+| `sysctl [parameter]` | 查看指定参数 |
+| `sysctl -w [param=value]` | 运行时修改参数 |
+| `sysctl -p` | 应用 `/etc/sysctl.conf` |
+| `cat /proc/cpuinfo` | 查看 CPU 信息 |
+| `cat /proc/meminfo` | 查看内存信息 |
 
+## 练习
+
+- [ ] 运行 `uname -a`，识别内核版本和 32/64 位架构
+- [ ] 运行 `lsmod`，大致统计加载的模块数量
+- [ ] 运行 `modinfo bluetooth`，查看 `depends` 字段
+- [ ] 运行 `sysctl net.ipv4.ip_forward`，记录当前值并解释修改影响
+
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-## Practice
-
-- [ ] Run `uname -a` and identify the kernel version and whether it's 32-bit or 64-bit
-- [ ] Run `lsmod` and scroll through - count roughly how many modules are loaded
-- [ ] Run `modinfo bluetooth` and find the `depends` field - see which other modules it relies on
-- [ ] Run `sysctl net.ipv4.ip_forward` and check the current value - note what it would mean to change it
-
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
----
-
-*Up next: Module 16 - Automation & Scheduled Jobs*
+*下一篇：模块 16——自动化与计划任务*

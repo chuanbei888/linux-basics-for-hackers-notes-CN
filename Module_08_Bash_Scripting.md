@@ -1,85 +1,57 @@
-# Linux Basics for Hackers
-## Module 8 - Bash Scripting
+# 黑客 Linux 基础
+## 模块 8：Bash 脚本
 
 ---
 
-## Overview
+## 概述
 
-A hacker who types the same commands over and over is wasting time. Scripting is how you automate that - you write the commands once in a file, and then you just run the file. This module covers how to write Bash scripts, from a basic "hello world" to something that actually takes input and does something useful with it.
+重复输入相同命令是在浪费时间。脚本可以把命令写入文件，之后直接运行文件。本模块从简单的“Hello World”开始，介绍如何编写会接收输入并完成实际工作的 Bash 脚本。
 
----
+## 什么是脚本
 
-## What a script is
+脚本是包含一系列命令的纯文本文件。运行它时，Bash 会按顺序读取并执行每一行，就像你手动输入一样，只是速度更快，也不必重复输入。终端中能运行的命令（`ls`、`ping`、`nmap`、`grep` 等）都可以放入脚本，还能用逻辑判断组合它们。
 
-A script is a plain text file containing a list of commands. When you run it, Bash reads each line and executes it in order, the same as if you'd typed each command yourself. The difference is it happens in seconds and you never have to type it again.
+## shebang 行
 
-You can put any command in a script that you'd run in the terminal. `ls`, `ping`, `nmap`, `grep` - all of it works. And you can combine them with logic: if this output contains this string, run this other command. That's where the power comes from.
-
----
-
-## The shebang line
-
-Every Bash script starts with this on the very first line:
+每个 Bash 脚本的第一行都应是：
 
 ```bash
 #!/bin/bash
 ```
 
-This is called the **shebang** (or hashbang). It tells the system exactly which program to use to interpret the file. Without it, Linux might not know what to do with the file - or it might use the wrong shell and your script breaks in confusing ways.
+这叫 **shebang**（或 hashbang），告诉系统用哪个程序解释文件。必须放在第一行，前面不能有空行。
 
-Always put it first. No blank line before it, nothing.
+## 创建第一个脚本
 
----
-
-## Creating your first script
-
-Open a text editor and create a file called `myscript.sh`:
+创建 `myscript.sh`：
 
 ```bash
 #!/bin/bash
 echo "Hello, world"
 ```
 
-Save it. Now before you can run it, you need to make it executable:
+赋予执行权限并运行：
 
 ```bash
 ahegazy0@kali:~$ chmod 755 myscript.sh
-```
-
-This gives you permission to run it as a program. Without this step, Linux will refuse to execute it and just tell you "Permission denied."
-
-Now run it:
-
-```bash
 ahegazy0@kali:~$ ./myscript.sh
 Hello, world
 ```
 
-The `./` at the start means "run this file from the current directory." You need it because the current directory usually isn't in your PATH, so Linux won't find the script otherwise.
+`./` 表示从当前目录运行文件，因为当前目录通常不在 PATH 中。
 
----
-
-## echo - printing to the screen
-
-`echo` prints whatever you give it to the terminal. It's how your script communicates back to you.
+## echo：向屏幕输出
 
 ```bash
 ahegazy0@kali:~$ echo "Scan starting..."
 ahegazy0@kali:~$ echo "Done."
-```
-
-You can also echo variable values:
-
-```bash
 ahegazy0@kali:~$ echo "Your username is: $USER"
 Your username is: kali
 ```
 
----
+## 脚本中的变量
 
-## Variables in scripts
-
-Variables let you store data and reuse it. You assign them like this - no spaces around the `=`:
+变量用于保存和复用数据，赋值时等号两边不能有空格：
 
 ```bash
 ahegazy0@kali:~$ name="Bob"
@@ -87,13 +59,11 @@ ahegazy0@kali:~$ echo "Hello, $name"
 Hello, Bob
 ```
 
-When you want to use the value stored in a variable, put `$` in front of the name. When you're assigning to it, no `$`.
+引用变量值时在名称前加 `$`，赋值时不要加。
 
----
+## read：接收用户输入
 
-## read - taking input from the user
-
-`read` pauses the script and waits for the user to type something, then stores what they typed in a variable.
+`read` 会暂停脚本，等待用户输入并保存到变量：
 
 ```bash
 #!/bin/bash
@@ -102,27 +72,13 @@ read name
 echo "Hello, $name"
 ```
 
-Run it and it waits. You type "Alice" and press enter:
-
-```
-What is your name?
-Alice
-Hello, Alice
-```
-
-You can also do it on one line with the `-p` flag (prompt):
+也可以用 `-p` 在一行中显示提示：
 
 ```bash
 ahegazy0@kali:~$ read -p "Enter your name: " name
 ```
 
-Cleaner. Does the same thing.
-
----
-
-## A practical example - ping scanner
-
-This is a simple script that asks for an IP address and pings it. It's the kind of thing you'd actually use:
+## 实例：简单的 ping 扫描器
 
 ```bash
 #!/bin/bash
@@ -131,15 +87,11 @@ echo "Pinging $target..."
 ping -c 4 $target
 ```
 
-The `-c 4` tells ping to send exactly 4 packets and stop. Without it, ping runs forever.
+`-c 4` 让 ping 只发送 4 个数据包。保存为 `pinger.sh`，运行 `chmod 755 pinger.sh` 后执行 `./pinger.sh`。
 
-Save it as `pinger.sh`, `chmod 755 pinger.sh`, and run it with `./pinger.sh`.
+## 注释
 
----
-
-## Comments
-
-Any line starting with `#` is a comment. Bash ignores it completely. Use them to explain what your script is doing, especially for anything non-obvious.
+以 `#` 开头的行是注释，Bash 会忽略它们：
 
 ```bash
 #!/bin/bash
@@ -150,13 +102,9 @@ read -p "Enter target IP: " target
 ping -c 4 $target   # send 4 packets only
 ```
 
-Comments are for you (and anyone else reading the script later). Write them as if you'll forget what this does in two weeks, because you will.
+注释用于帮助未来的自己和其他读者理解代码。
 
----
-
-## Conditional logic - if/else
-
-Once you can make decisions in a script, it becomes genuinely useful. Basic syntax:
+## 条件逻辑：if/else
 
 ```bash
 #!/bin/bash
@@ -169,24 +117,20 @@ echo "That number is 10 or less"
 fi
 ```
 
-`fi` closes the `if` block (it's just `if` backwards). The `-gt` means "greater than". Common comparison operators:
+`fi` 用于结束 `if` 块，`-gt` 表示“大于”。
 
-| Operator | Meaning |
+| 运算符 | 含义 |
 |---|---|
-| `-eq` | Equal to |
-| `-ne` | Not equal to |
-| `-gt` | Greater than |
-| `-lt` | Less than |
-| `-ge` | Greater than or equal |
-| `-le` | Less than or equal |
+| `-eq` | 等于 |
+| `-ne` | 不等于 |
+| `-gt` | 大于 |
+| `-lt` | 小于 |
+| `-ge` | 大于或等于 |
+| `-le` | 小于或等于 |
 
-For comparing strings, use `=` and `!=` inside the brackets.
+比较字符串时，在方括号内使用 `=` 和 `!=`。
 
----
-
-## Loops - doing something repeatedly
-
-A `for` loop runs a block of commands multiple times:
+## 循环：重复执行
 
 ```bash
 #!/bin/bash
@@ -196,13 +140,9 @@ ping -c 1 192.168.1.$i
 done
 ```
 
-This pings five different IP addresses one after another. This is basically a primitive network scanner. Real scanners like nmap do this thousands of times with much more logic around it, but the concept is the same.
+这会依次 ping 五个 IP 地址，是一个简易网络扫描器。nmap 的原理类似，只是功能更丰富。
 
----
-
-## Making scripts actually useful - the structure to follow
-
-A script that's worth keeping usually has this shape:
+## 实用脚本的推荐结构
 
 ```bash
 #!/bin/bash
@@ -223,55 +163,52 @@ nmap -sV $target
 echo "Scan complete."
 ```
 
-Clean sections, comments on anything that needs explaining, and the logic flows top to bottom. You don't need to follow this exactly, but having some structure stops scripts from becoming unreadable after you write more than 20 lines.
+按“变量、输入、主要逻辑、完成”组织内容，并为不明显的部分写注释，脚本会更易读。
 
----
+## 文件权限回顾：chmod
 
-## File permissions recap - chmod
-
-When you create a script, it's a regular text file by default. To run it, you need the execute permission set.
+脚本创建时默认只是普通文本文件，必须添加执行权限：
 
 ```bash
 ahegazy0@kali:~$ chmod 755 myscript.sh
 ```
 
-What `755` means:
-- `7` - owner can read, write, and execute
-- `5` - group can read and execute
-- `5` - everyone else can read and execute
+- `7`：所有者可读、可写、可执行
+- `5`：组可读、可执行
+- `5`：其他人可读、可执行
 
-For personal scripts that only you need to run, `chmod 700` is fine - only you can do anything with it.
+只供自己运行的脚本可以使用 `chmod 700`。
 
 ---
 
-## Command Reference
+## 命令速查
 
-| Command / Concept | What it does |
+| 命令/概念 | 作用 |
 |---|---|
-| `#!/bin/bash` | Shebang - must be the first line of every script |
-| `echo "text"` | Print text to the screen |
-| `read var` | Take user input and store it in a variable |
-| `read -p "prompt" var` | Same but with an inline prompt message |
-| `name="value"` | Assign a value to a variable |
-| `$name` | Use the value of a variable |
-| `chmod 755 file.sh` | Make a script executable |
-| `./script.sh` | Run a script in the current directory |
-| `# comment` | A line Bash ignores - notes for humans |
-| `if [ ] then / fi` | Conditional logic |
-| `for x in ... do / done` | Loop over a list |
+| `#!/bin/bash` | shebang，必须是脚本第一行 |
+| `echo "text"` | 向屏幕输出文字 |
+| `read var` | 接收输入并保存到变量 |
+| `read -p "prompt" var` | 接收输入并显示提示 |
+| `name="value"` | 给变量赋值 |
+| `$name` | 使用变量值 |
+| `chmod 755 file.sh` | 使脚本可执行 |
+| `./script.sh` | 运行当前目录中的脚本 |
+| `# comment` | Bash 忽略的注释行 |
+| `if [ ] then / fi` | 条件逻辑 |
+| `for x in ... do / done` | 遍历列表的循环 |
 
 ---
 
-## Practice
+## 练习
 
-- [ ] Write a script that asks for your name and prints "Hello, [name]"
-- [ ] Make it executable with `chmod 755` and run it with `./`
-- [ ] Write a second script that asks for an IP address and runs `ping -c 4` on it
-- [ ] Once that works, modify it to loop through a range like `192.168.1.1` to `192.168.1.5` and ping each one
+- [ ] 写一个询问姓名并输出 “Hello, [name]” 的脚本
+- [ ] 用 `chmod 755` 添加执行权限并用 `./` 运行
+- [ ] 写第二个脚本，询问 IP 地址并执行 `ping -c 4`
+- [ ] 修改它，循环 ping `192.168.1.1` 到 `192.168.1.5`
 
-The ping loop exercise is worth doing properly. It's a real technique and understanding how it works makes nmap output make more sense later.
+认真完成 ping 循环练习。这是实际会用到的技巧，也能帮助你理解 nmap 输出。
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-*Up next: Module 9 - Archiving & Compression*
+*下一篇：模块 9——归档与压缩*

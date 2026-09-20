@@ -1,21 +1,15 @@
-# Linux Basics for Hackers
-## Module 7 - Environment Variables
+# 黑客 Linux 基础
+## 模块 7：环境变量
 
 ---
 
-## Overview
+## 概述
 
-Your Linux system runs on a set of behind-the-scenes settings that control how everything behaves - where it looks for programs, who you are, what your home folder is, what your terminal prompt looks like. These are called **environment variables**. They're always there, you just haven't looked at them yet.
+Linux 依靠一组后台设置控制系统行为：去哪里查找程序、当前用户是谁、主目录在哪里、终端提示符长什么样。这些设置叫作**环境变量**。它们一直存在，只是你还没有查看过。
 
----
+## 环境变量究竟是什么
 
-## What environment variables actually are
-
-An environment variable is just a named value the system keeps in memory while you're logged in. Programs and the shell itself read these values constantly to decide how to behave.
-
-Some are set by the system at boot. Some are set when you log in. And you can create or change your own at any time.
-
-The naming convention is simple: variable names are usually all caps, and you reference them by putting a `$` in front of the name.
+环境变量就是用户登录期间由系统保存在内存中的命名值。程序和 shell 会不断读取它们来决定行为。变量名通常使用大写字母，引用时在名称前加 `$`：
 
 ```bash
 ahegazy0@kali:~$ echo $HOME
@@ -24,49 +18,43 @@ ahegazy0@kali:~$ echo $HOME
 
 ---
 
-## The important variables to know
+## 需要认识的重要变量
 
-| Variable | What it holds |
+| 变量 | 保存的内容 |
 |---|---|
-| `$PATH` | List of folders the system searches when you type a command |
-| `$HOME` | Your home folder path |
-| `$USER` | Your current username |
-| `$SHELL` | Which shell you're running (usually /bin/bash) |
-| `$HISTSIZE` | How many commands your history file remembers |
-| `$PS1` | What your command prompt looks like |
+| `$PATH` | 输入命令时系统搜索的文件夹列表 |
+| `$HOME` | 主目录路径 |
+| `$USER` | 当前用户名 |
+| `$SHELL` | 正在运行的 shell（通常是 /bin/bash） |
+| `$HISTSIZE` | 历史文件保存的命令数量 |
+| `$PS1` | 命令提示符的样式 |
 
 ---
 
-## PATH - the most important one
+## PATH：最重要的变量
 
-`$PATH` is a list of folder paths separated by colons. When you type a command like `ls`, the system doesn't magically know where `ls` lives. It goes through every folder listed in `$PATH`, one by one, until it finds a program with that name.
+`$PATH` 是由冒号分隔的一组文件夹路径。输入 `ls` 时，系统会逐个搜索 PATH 中的文件夹，直到找到同名程序：
 
 ```bash
 ahegazy0@kali:~$ echo $PATH
 /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ```
 
-Each folder separated by `:` is a place the system will look.
+因此，安装工具后若其目录不在 PATH 中，就会出现“command not found”。修复方法是把目录加入 PATH。
 
-This is why you get "command not found" sometimes. You installed a tool, but its folder isn't in your PATH, so the system has no idea where to look for it. The fix is adding that folder to PATH, which is covered below.
+**不要破坏 PATH。** 如果覆盖了原有值，系统会找不到几乎所有命令。编辑时务必小心。
 
-**If you break your PATH variable**, you lose the ability to run almost any command because the system can't find them anymore. This is fixable but annoying. Be careful when editing it.
-
----
-
-## Viewing all your environment variables
+## 查看全部环境变量
 
 ```bash
 ahegazy0@kali:~$ env
 ```
 
-This prints every environment variable currently set in your session. There'll be more than you expect. Scroll through it and you'll recognize most of them.
+这会打印当前会话设置的全部环境变量。
 
----
+## 修改和创建变量
 
-## Changing and creating variables
-
-To create or change a variable just for your current terminal session:
+只对当前终端会话创建或修改变量：
 
 ```bash
 ahegazy0@kali:~$ MYVAR="hello"
@@ -74,96 +62,75 @@ ahegazy0@kali:~$ echo $MYVAR
 hello
 ```
 
-The problem is this disappears the moment you close the terminal. To make it available to any child processes (programs you run from your terminal), you need to **export** it:
+关闭终端后这种变量会消失。使用 `export` 后，当前终端启动的子进程也能读取它：
 
 ```bash
 ahegazy0@kali:~$ export MYVAR="hello"
-```
-
-Now any program launched from that terminal can read `$MYVAR`.
-
-To add a folder to your PATH without overwriting the existing one:
-
-```bash
 ahegazy0@kali:~$ export PATH=$PATH:/new/folder/here
 ```
 
-The `$PATH` at the start keeps everything that was already there. You're just appending `:new/folder/here` to the end. If you forget that part and just write `/new/folder/here`, you wipe everything else and break your PATH entirely.
+开头的 `$PATH` 会保留已有目录，只在末尾追加新路径。忘记它会覆盖整个 PATH。
 
----
+## 让修改永久生效
 
-## Making changes permanent
-
-`export` only lasts for the current session. To make a variable stick across reboots and new terminals, you add it to your shell's config file.
-
-For bash, that file is `~/.bashrc`. Open it and add your export line at the bottom:
+`export` 只对当前会话有效。要跨重启和新终端保留设置，把它写入 Bash 配置文件 `~/.bashrc`：
 
 ```bash
 ahegazy0@kali:~$ export PATH=$PATH:/your/new/tool/folder
-```
-
-Save the file. Then either open a new terminal or run:
-
-```bash
 ahegazy0@kali:~$ source ~/.bashrc
 ```
 
-That reloads the file without needing to restart.
+`source` 会重新加载配置，不需要重启终端。
 
----
+## 修改提示符：PS1
 
-## Changing your prompt - PS1
-
-`$PS1` controls what your command prompt looks like. By default it shows something like `kali@kali:~$`. You can change it to anything.
+`$PS1` 控制命令提示符的显示方式：
 
 ```bash
 ahegazy0@kali:~$ export PS1="Hacker-Level-99: # "
 ```
 
-Your prompt now looks like:
+提示符会变成：
+
 ```
 Hacker-Level-99: # 
 ```
 
-It's mostly cosmetic, but some people set their prompt to show useful info - the current directory, the git branch they're on, the time. For now just know that PS1 is what controls it and you can edit it.
+它主要是外观设置，也可以配置为显示当前目录、Git 分支或时间。
 
----
+## 黑客使用的历史记录技巧
 
-## The history trick hackers use
-
-`$HISTSIZE` controls how many commands get saved to your history file. When you press the up arrow and scroll through past commands, that's history.
+`$HISTSIZE` 控制历史文件保存多少条命令。设为 0 就不会保存：
 
 ```bash
 ahegazy0@kali:~$ export HISTSIZE=0
 ```
 
-Setting it to 0 means nothing gets saved. The terminal stops logging your commands for the rest of that session. After you close the terminal, anyone who opens the history file won't see what you ran.
-
-This is a basic operational security move. If you're on a system you're not supposed to be on and you don't want to leave traces, this is one of the first things you do.
+这是一种基础的操作安全措施，可以减少命令痕迹。但在实际系统中应遵守授权和审计要求，不能把它当作消除日志的手段。
 
 ---
 
-## Command Reference
+## 命令速查
 
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `env` | Print all current environment variables |
-| `echo $VAR` | Print the value of a specific variable |
-| `MYVAR="value"` | Create a variable for the current session |
-| `export MYVAR="value"` | Create a variable available to child processes too |
-| `export PATH=$PATH:/folder` | Add a folder to PATH without breaking it |
-| `source ~/.bashrc` | Reload your bash config file without restarting |
+| `env` | 打印当前所有环境变量 |
+| `echo $VAR` | 打印指定变量的值 |
+| `MYVAR="value"` | 创建当前会话变量 |
+| `export MYVAR="value"` | 创建对子进程可见的变量 |
+| `export PATH=$PATH:/folder` | 在不破坏 PATH 的前提下追加目录 |
+| `source ~/.bashrc` | 不重启终端就重新加载 Bash 配置 |
 
 ---
 
-## Practice
+## 练习
 
-- [ ] Run `env` and find your `$SHELL` variable - it'll tell you exactly what shell you're running
-- [ ] Run `echo $PATH` and look at every folder listed - those are all the places your system looks for programs
-- [ ] Try `export HISTSIZE=0` then press the up arrow - your history is gone for this session
-- [ ] Change your PS1 to display just your name, or something custom, and watch the prompt update immediately
+- [ ] 运行 `env` 找到 `$SHELL`，确认当前 shell
+- [ ] 运行 `echo $PATH` 查看系统搜索程序的所有目录
+- [ ] 尝试 `export HISTSIZE=0`，再按向上箭头观察本会话历史
+- [ ] 修改 PS1 只显示你的名字或自定义内容，观察提示符即时变化
 
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-*Up next: Module 8 - Bash Scripting*
+*下一篇：模块 8——Bash 脚本*

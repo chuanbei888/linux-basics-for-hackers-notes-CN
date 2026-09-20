@@ -1,83 +1,56 @@
-# Linux Basics for Hackers
-## Module 10 - Filesystem & Storage
+# 黑客 Linux 基础
+## 模块 10：文件系统与存储
 
 ---
 
-## Overview
+## 概述
 
-Linux has a completely different relationship with storage devices than Windows does. No drive letters, no automatic pop-ups when you plug something in. Everything is a file, every device lives somewhere in the filesystem tree, and if you want to use a drive you have to explicitly attach it. This module explains how all of that works.
+Linux 对存储设备的处理方式与 Windows 完全不同：没有盘符，插入设备时也不会自动弹出窗口。一切都是文件，每个设备都位于文件系统树中的某处；要使用磁盘，必须显式挂载。本模块解释这些机制。
 
----
+## 一切都是文件
 
-## Everything is a file
+“一切都是文件”在 Linux 中不是比喻，而是系统的实际设计。硬盘、键盘和网卡都以特殊文件形式存在，设备文件位于 `/dev`，内核知道如何与它们通信。
 
-In Linux, the phrase "everything is a file" isn't just a saying - it's literally how the system is built. Your hard drive isn't a separate thing that exists outside the filesystem. It's represented as a file inside `/dev`. Your keyboard is a file. Your network card is a file. Devices are just special files that the kernel knows how to talk to.
-
-Storage devices live in `/dev` and are named like this:
-
-| Device | What it is |
+| 设备 | 含义 |
 |---|---|
-| `/dev/sda` | First hard drive |
-| `/dev/sdb` | Second hard drive |
-| `/dev/sdc` | Third hard drive (or USB) |
-| `/dev/sda1` | First partition on the first drive |
-| `/dev/sda2` | Second partition on the first drive |
-| `/dev/sr0` | CD/DVD drive |
+| `/dev/sda` | 第一块硬盘 |
+| `/dev/sdb` | 第二块硬盘 |
+| `/dev/sdc` | 第三块硬盘（或 USB） |
+| `/dev/sda1` | 第一块硬盘的第一个分区 |
+| `/dev/sda2` | 第一块硬盘的第二个分区 |
+| `/dev/sr0` | CD/DVD 光驱 |
 
-The `sd` stands for SCSI disk - the naming convention comes from an older interface standard, but it's used for modern SATA and USB drives too. The letter after `sd` is the drive order (`a` = first, `b` = second). The number after that is the partition number.
+`sd` 源于 SCSI disk，现代 SATA 和 USB 磁盘也沿用该命名。字母表示磁盘顺序（`a` 第一块，`b` 第二块），数字表示分区号。因此 `/dev/sdb3` 就是第二块磁盘的第三个分区。
 
-So `/dev/sdb3` means: second drive, third partition.
+## 挂载：Linux 如何连接磁盘
 
----
-
-## Mounting - how Linux attaches drives
-
-In Windows, plug in a USB and it automatically gets a drive letter like `D:`. Linux doesn't do that. You have to **mount** the drive yourself.
-
-Mounting means telling Linux: "attach this device to this folder in the tree." Once it's mounted, you access the drive by navigating to that folder. The folder it gets attached to is called the **mount point**.
+Windows 会给 USB 分配 `D:` 等盘符，Linux 则要手动**挂载**。挂载就是把设备连接到文件树中的某个文件夹，该文件夹叫**挂载点**。
 
 ```
 /
 └── mnt/
-    └── usb/    ← your USB drive appears here after mounting
+    └── usb/    ← 挂载后 USB 出现在这里
 ```
 
-The standard locations for mount points are `/mnt` (for temporary manual mounts) and `/media` (where the system auto-mounts things like USB drives in desktop environments).
-
-**To mount a drive:**
-
-```bash
-ahegazy0@kali:~$ mount /dev/sdb1 /mnt/usb
-```
-
-This attaches the first partition of your second drive to the folder `/mnt/usb`. After this, going into `/mnt/usb` shows you the files on that drive.
-
-The folder must already exist before you mount to it:
+临时手动挂载通常使用 `/mnt`，桌面环境自动挂载设备时常用 `/media`。
 
 ```bash
 ahegazy0@kali:~$ mkdir /mnt/usb
 ahegazy0@kali:~$ mount /dev/sdb1 /mnt/usb
-```
-
-**To unmount:**
-
-```bash
 ahegazy0@kali:~$ umount /mnt/usb
 ```
 
-Note the spelling - it's `umount`, not `unmount`. Always unmount before physically unplugging a drive. If the system is still writing data to it when you yank it out, you can corrupt the filesystem.
+注意命令拼写是 `umount` 而不是 `unmount`。拔出设备前必须先卸载，否则可能损坏文件系统。
 
----
+## fdisk：查看磁盘
 
-## fdisk - seeing what drives you have
-
-`fdisk -l` lists every drive and every partition currently connected to the system. It requires root.
+`fdisk -l` 会列出所有磁盘和分区，需要 root 权限：
 
 ```bash
 ahegazy0@kali:~$ fdisk -l
 ```
 
-Output looks something like:
+示例输出：
 
 ```
 Disk /dev/sda: 500 GB, 500107862016 bytes
@@ -90,21 +63,17 @@ Device     Boot  Start     End  Sectors  Size  Type
 /dev/sdb1  *      2048 31252479 31250432 14.9G  Microsoft basic data
 ```
 
-From this you can see: two drives connected, what partitions each has, the size of each partition, and the filesystem type. This is your first step whenever you're dealing with an unknown machine - you want to know what storage is attached.
+可以看到连接的磁盘、分区、大小和文件系统类型。处理未知机器时，这是确认存储设备的第一步。
 
----
+## df：查看剩余空间
 
-## df - how much space is left
-
-`df` stands for "disk free." It shows how much space is used and available on every mounted filesystem.
+`df`（disk free）显示每个已挂载文件系统的使用和可用空间：
 
 ```bash
 ahegazy0@kali:~$ df -h
 ```
 
-The `-h` flag means human-readable - shows sizes in GB and MB instead of raw bytes.
-
-Output:
+`-h` 以 GB、MB 等易读单位显示：
 
 ```
 Filesystem      Size  Used Avail Use%  Mounted on
@@ -113,19 +82,15 @@ Filesystem      Size  Used Avail Use%  Mounted on
 tmpfs           2.0G  1.2M  2.0G   1%  /run
 ```
 
-The `Use%` column tells you at a glance which partitions are filling up. `tmpfs` entries are virtual filesystems in RAM - not actual disk space.
+`Use%` 可快速看出哪个分区接近已满；`tmpfs` 是位于内存中的虚拟文件系统。
 
----
+## /etc/fstab：持久化挂载配置
 
-## /etc/fstab - the persistent mount config
-
-When you mount something with the `mount` command, it's temporary. After a reboot, the drive is no longer mounted. To make a mount permanent - to have it automatically mount at boot - you add an entry to `/etc/fstab`.
+用 `mount` 的挂载默认只持续到重启。要在启动时自动挂载，把条目写入 `/etc/fstab`：
 
 ```bash
 ahegazy0@kali:~$ cat /etc/fstab
 ```
-
-Each line in fstab describes one filesystem to mount:
 
 ```
 # device          mountpoint    fstype   options    dump  pass
@@ -134,91 +99,71 @@ Each line in fstab describes one filesystem to mount:
 UUID=1234-ABCD    /mnt/data     ntfs     defaults    0     0
 ```
 
-From a recon perspective, `/etc/fstab` tells you a lot about a target system. It shows every drive that gets mounted at boot - including network shares (NFS, SMB), encrypted volumes, and external disks. Hidden or unusual entries here can point to things worth investigating.
+从侦察角度看，`fstab` 会暴露启动时挂载的网络共享（NFS、SMB）、加密卷和外部磁盘等信息。
 
----
+## fsck：检查和修复磁盘
 
-## fsck - checking and repairing drives
-
-`fsck` stands for "filesystem check." It scans a drive for errors and can attempt to fix them.
-
-```bash
-ahegazy0@kali:~$ fsck /dev/sdb1
-```
-
-**The critical rule: never run fsck on a mounted filesystem.** If the drive is mounted and in use, fsck can make the corruption worse, not better. Always unmount first:
+`fsck`（filesystem check）扫描文件系统错误并尝试修复：
 
 ```bash
 ahegazy0@kali:~$ umount /dev/sdb1
 ahegazy0@kali:~$ fsck /dev/sdb1
 ```
 
-If you're checking your root partition (`/`), you can't unmount it while the system is running - you'd need to boot from a live USB and run fsck from there.
+**绝不能对已挂载的文件系统运行 fsck。** 挂载状态下运行可能让损坏更严重。检查根分区时无法在运行中的系统中卸载，需要从 Live USB 启动后执行。
 
----
+## 文件系统类型
 
-## Filesystem types
-
-When you format a partition, you choose a filesystem type. Different operating systems use different formats. Knowing these matters when you're mounting drives from other systems.
-
-| Filesystem | Where you see it |
+| 文件系统 | 常见场景 |
 |---|---|
-| ext4 | Standard Linux filesystem |
-| ext3 / ext2 | Older Linux filesystems |
-| NTFS | Windows drives |
-| FAT32 / exFAT | USB drives, SD cards (cross-platform) |
-| XFS | High-performance Linux, often on servers |
+| ext4 | 标准 Linux 文件系统 |
+| ext3 / ext2 | 较老的 Linux 文件系统 |
+| NTFS | Windows 磁盘 |
+| FAT32 / exFAT | USB、SD 卡，跨平台 |
+| XFS | 高性能 Linux，常见于服务器 |
 
-When mounting a non-Linux drive, you may need to specify the type:
+挂载非 Linux 磁盘时可以指定类型：
 
 ```bash
 ahegazy0@kali:~$ mount -t ntfs /dev/sdb1 /mnt/windows
 ```
 
-Linux can read NTFS drives fine. Writing to them works too but historically had some quirks - just worth knowing.
-
----
-
-## Mounting a USB drive - the full workflow
-
-This is the complete process from plug-in to accessing files:
+## 挂载 USB 的完整流程
 
 ```bash
-# 1. See what just got connected
+# 1. 查看刚连接的设备
 ahegazy0@kali:~$ fdisk -l
 
-# 2. Create a mount point if it doesn't exist
+# 2. 创建挂载点
 ahegazy0@kali:~$ mkdir /mnt/usb
 
-# 3. Mount the partition
+# 3. 挂载分区
 ahegazy0@kali:~$ mount /dev/sdb1 /mnt/usb
 
-# 4. Check it worked
+# 4. 确认成功
 ahegazy0@kali:~$ ls /mnt/usb
 
-# 5. Do whatever you need to do
+# 5. 执行需要的操作
 
-# 6. Unmount when done
+# 6. 完成后卸载
 ahegazy0@kali:~$ umount /mnt/usb
 ```
 
----
+## 命令速查
 
-## Command Reference
-
-| Command | What it does |
+| 命令 | 作用 |
 |---|---|
-| `fdisk -l` | List all drives and partitions |
-| `mount /dev/sdb1 /mnt/point` | Mount a partition to a folder |
-| `mount -t ntfs /dev/sdb1 /mnt/point` | Mount with a specific filesystem type |
-| `umount /mnt/point` | Safely unmount a drive |
-| `df -h` | Show disk space usage (human-readable) |
-| `fsck /dev/sdb1` | Check and repair a filesystem (unmount first) |
-| `cat /etc/fstab` | Show permanent mount configuration |
-| `mkdir /mnt/point` | Create a mount point directory |
-| `lsblk` | Clean tree view of drives and partitions |
+| `fdisk -l` | 列出所有磁盘和分区 |
+| `mount /dev/sdb1 /mnt/point` | 将分区挂载到文件夹 |
+| `mount -t ntfs /dev/sdb1 /mnt/point` | 指定文件系统类型挂载 |
+| `umount /mnt/point` | 安全卸载磁盘 |
+| `df -h` | 以易读格式显示空间使用情况 |
+| `fsck /dev/sdb1` | 检查并修复文件系统（先卸载） |
+| `cat /etc/fstab` | 查看持久化挂载配置 |
+| `mkdir /mnt/point` | 创建挂载点目录 |
+| `lsblk` | 以树状结构显示磁盘和分区 |
 
-One extra worth knowing: `lsblk` gives you a cleaner view than `fdisk -l` for just seeing your drive layout:
+`lsblk` 比 `fdisk -l` 更适合快速查看布局：
 
 ```bash
 ahegazy0@kali:~$ lsblk
@@ -230,19 +175,15 @@ sdb    8:16      16G  disk
 └─sdb1 8:17     16G  part  /mnt/usb
 ```
 
-Much easier to read at a glance than raw fdisk output.
+## 练习
 
+- [ ] 运行 `fdisk -l`，识别虚拟机连接的所有磁盘和分区
+- [ ] 运行 `df -h`，找出最接近已满的分区
+- [ ] 用 `mkdir` 创建 `/mnt/test`，添加虚拟磁盘，找到设备名并挂载
+- [ ] 运行 `ls /mnt/test` 确认成功，完成后用 `umount /mnt/test`
+- [ ] 阅读 `/etc/fstab`，理解每一行配置
+
+> 💡 *为了进行更深入的练习，也建议完成官方 **Linux Basics for Hackers** 书中每章末尾的练习。*
 ---
 
-## Practice
-
-- [ ] Run `fdisk -l` and identify every drive and partition connected to your VM
-- [ ] Run `df -h` and find which partition is closest to full
-- [ ] Create `/mnt/test` with `mkdir`, plug in a USB drive (or add a virtual disk in VirtualBox), find its device name with `fdisk -l`, and mount it to `/mnt/test`
-- [ ] After mounting, run `ls /mnt/test` to confirm it worked, then `umount /mnt/test` when done
-- [ ] Read through `/etc/fstab` and understand what each line is doing
-
-> 💡 *For deeper practice, I also recommend completing the end-of-chapter exercises in the official **Linux Basics for Hackers** book.*
----
-
-*Up next: Module 11 - Logging & Log Files*
+*下一篇：模块 11——日志与日志文件*
