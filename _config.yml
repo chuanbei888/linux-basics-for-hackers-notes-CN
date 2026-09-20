@@ -2,8 +2,8 @@ title: 黑客 Linux 基础
 description: 面向安全学习者的中文 Linux 基础与实验笔记
 lang: zh-CN
 url: https://chuanbei888.github.io
-baseurl: /linux-basics-learn
-repository: chuanbei888/linux-basics-learn
+baseurl: /linux-basics-for-hackers-notes-CN
+repository: chuanbei888/linux-basics-for-hackers-notes-CN
 markdown: kramdown
 permalink: pretty
 kramdown:

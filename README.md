@@ -2,7 +2,7 @@
 
 本项目是基于 OccupyTheWeb《Linux Basics for Hackers》整理的中文学习笔记。内容最初来自个人在 Obsidian 中的实验记录，随后经过整理，便于系统学习、检索和复习。
 
-**在线阅读：** [GitHub Pages 文档站](https://chuanbei888.github.io/linux-basics-learn/)
+**在线阅读：** [GitHub Pages 文档站](https://chuanbei888.github.io/linux-basics-for-hackers-notes-CN/)
 
 > **更新：** 核心模块加入了文件系统树、命令管道、权限、内核空间等主题的可视化架构图。
 
