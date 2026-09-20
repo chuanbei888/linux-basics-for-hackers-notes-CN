@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 8：Bash 脚本
+description: 从变量和输入开始编写可复用的自动化脚本。
+permalink: /Module_08_Bash_Scripting.html
+---
+
 # 黑客 Linux 基础
 ## 模块 8：Bash 脚本
 

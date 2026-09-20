@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 15：内核与可加载内核模块
+description: 了解内核空间、模块、sysctl 和 /proc。
+permalink: /Module_15_Kernel_LKMs.html
+---
+
 # 黑客 Linux 基础
 ## 模块 15：内核与可加载内核模块
 

@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 4：软件管理
+description: 使用 apt、软件仓库和 Git 获取与维护工具。
+permalink: /Module_04_Software_Management.html
+---
+
 # 黑客 Linux 基础
 ## 模块 4：软件管理
 

@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 1：终端基础
+description: 掌握 Linux 文件系统、导航和常用终端命令。
+permalink: /Module_01_Terminal_Basics.html
+---
+
 # 黑客 Linux 基础
 ## 模块 1：终端基础
 

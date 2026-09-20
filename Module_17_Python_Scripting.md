@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 17：Python 脚本
+description: 用 Python 编写网络工具和安全自动化脚本。
+permalink: /Module_17_Python_Scripting.html
+---
+
 # 黑客 Linux 基础
 ## 模块 17：Python 脚本
 

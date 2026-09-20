@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 3：网络管理
+description: 了解 IP、MAC、DHCP 和 DNS 等基础网络概念。
+permalink: /Module_03_Managing_Networks.html
+---
+
 # 黑客 Linux 基础
 ## 模块 3：网络管理
 

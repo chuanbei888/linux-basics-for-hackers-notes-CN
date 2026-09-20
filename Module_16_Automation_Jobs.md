@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 16：自动化与计划任务
+description: 使用 cron 和 systemd 安排重复任务。
+permalink: /Module_16_Automation_Jobs.html
+---
+
 # 黑客 Linux 基础
 ## 模块 16：自动化与计划任务
 

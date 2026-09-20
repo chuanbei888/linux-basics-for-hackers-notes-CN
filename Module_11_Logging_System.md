@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 11：日志系统
+description: 读取系统日志、理解轮换并从防御角度审计事件。
+permalink: /Module_11_Logging_System.html
+---
+
 # 黑客 Linux 基础
 ## 模块 11：日志系统
 

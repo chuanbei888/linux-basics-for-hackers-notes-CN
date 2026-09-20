@@ -1,0 +1,18 @@
+title: 黑客 Linux 基础
+description: 面向安全学习者的中文 Linux 基础与实验笔记
+lang: zh-CN
+url: https://chuanbei888.github.io
+baseurl: /linux-basics-learn
+repository: chuanbei888/linux-basics-learn
+markdown: kramdown
+permalink: pretty
+kramdown:
+  input: GFM
+  hard_wrap: false
+exclude:
+  - .agents
+  - .codex
+  - .git
+  - Gemfile
+  - Gemfile.lock
+  - vendor

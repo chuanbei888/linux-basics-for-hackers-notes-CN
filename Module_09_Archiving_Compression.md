@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 9：归档与压缩
+description: 使用 tar、gzip、bzip2 和 dd 管理数据。
+permalink: /Module_09_Archiving_Compression.html
+---
+
 # 黑客 Linux 基础
 ## 模块 9：归档与压缩
 

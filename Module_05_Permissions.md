@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 5：权限与特权
+description: 读取权限、使用 chmod 和识别 SUID 风险。
+permalink: /Module_05_Permissions.html
+---
+
 # 黑客 Linux 基础
 ## 模块 5：权限与特权
 

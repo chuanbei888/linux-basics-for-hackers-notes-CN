@@ -1,0 +1,90 @@
+- number: "00"
+  title: 开始学习与搭建实验环境
+  short_title: 入门与实验环境
+  description: 使用 VirtualBox 搭建 Kali Linux 安全实验环境。
+  url: /Module_00_Getting_Started.html
+- number: "01"
+  title: 终端基础
+  short_title: 终端基础
+  description: 掌握 Linux 文件系统、导航和常用终端命令。
+  url: /Module_01_Terminal_Basics.html
+- number: "02"
+  title: 文本处理
+  short_title: 文本处理
+  description: 使用 grep、sed、管道等工具筛选和处理文本。
+  url: /Module_02_Text_Manipulation.html
+- number: "03"
+  title: 网络管理
+  short_title: 网络管理
+  description: 了解 IP、MAC、DHCP 和 DNS 等基础网络概念。
+  url: /Module_03_Managing_Networks.html
+- number: "04"
+  title: 软件管理
+  short_title: 软件管理
+  description: 使用 apt、软件仓库和 Git 获取与维护工具。
+  url: /Module_04_Software_Management.html
+- number: "05"
+  title: 文件与目录权限
+  short_title: 权限与特权
+  description: 读取权限、使用 chmod 和识别 SUID 风险。
+  url: /Module_05_Permissions.html
+- number: "06"
+  title: 进程管理
+  short_title: 进程管理
+  description: 查看、切换和控制前台、后台进程。
+  url: /Module_06_Process_Management.html
+- number: "07"
+  title: 环境变量
+  short_title: 环境变量
+  description: 理解 PATH、Shell 配置和会话环境。
+  url: /Module_07_Environment_Variables.html
+- number: "08"
+  title: Bash 脚本
+  short_title: Bash 脚本
+  description: 从变量和输入开始编写可复用的自动化脚本。
+  url: /Module_08_Bash_Scripting.html
+- number: "09"
+  title: 归档与压缩
+  short_title: 归档与压缩
+  description: 使用 tar、gzip、bzip2 和 dd 管理数据。
+  url: /Module_09_Archiving_Compression.html
+- number: "10"
+  title: 文件系统与存储
+  short_title: 文件系统与存储
+  description: 挂载磁盘、检查文件系统并理解设备文件。
+  url: /Module_10_Filesystem_Storage.html
+- number: "11"
+  title: 日志系统
+  short_title: 日志与审计
+  description: 读取系统日志、理解轮换并从防御角度审计事件。
+  url: /Module_11_Logging_System.html
+- number: "12"
+  title: 服务的使用与滥用
+  short_title: 服务管理
+  description: 管理 Apache、SSH、MySQL 等常见服务。
+  url: /Module_12_Using_Abusing_Services.html
+- number: "13"
+  title: 安全与匿名性
+  short_title: 安全与匿名性
+  description: 认识代理、Tor、VPN 和操作安全的边界。
+  url: /Module_13_Security_Anonymity.html
+- number: "14"
+  title: 无线网络
+  short_title: 无线网络
+  description: 在授权环境中检查 Wi-Fi 与 Bluetooth 网络。
+  url: /Module_14_Wireless_Networking.html
+- number: "15"
+  title: 内核与可加载内核模块
+  short_title: 内核与模块
+  description: 了解内核空间、模块、sysctl 和 /proc。
+  url: /Module_15_Kernel_LKMs.html
+- number: "16"
+  title: 自动化与计划任务
+  short_title: 自动化与计划任务
+  description: 使用 cron 和 systemd 安排重复任务。
+  url: /Module_16_Automation_Jobs.html
+- number: "17"
+  title: Python 脚本
+  short_title: Python 脚本
+  description: 用 Python 编写网络工具和安全自动化脚本。
+  url: /Module_17_Python_Scripting.html

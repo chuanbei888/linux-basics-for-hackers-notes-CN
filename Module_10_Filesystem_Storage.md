@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 10：文件系统与存储
+description: 挂载磁盘、检查文件系统并理解设备文件。
+permalink: /Module_10_Filesystem_Storage.html
+---
+
 # 黑客 Linux 基础
 ## 模块 10：文件系统与存储
 

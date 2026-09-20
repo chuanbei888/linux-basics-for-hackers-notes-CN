@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 6：进程管理
+description: 查看、切换和控制前台、后台进程。
+permalink: /Module_06_Process_Management.html
+---
+
 # 黑客 Linux 基础
 ## 模块 6：进程管理
 

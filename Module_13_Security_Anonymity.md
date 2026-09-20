@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 13：安全与匿名性
+description: 认识代理、Tor、VPN 和操作安全的边界。
+permalink: /Module_13_Security_Anonymity.html
+---
+
 # 黑客 Linux 基础
 ## 模块 13：安全与匿名性
 

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="{{ page.lang | default: site.lang | default: 'zh-CN' }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#17202a">
+    <meta name="description" content="{{ page.description | default: site.description | escape }}">
+    <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+    <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="{{ '/' | relative_url }}" aria-label="返回首页">
+          <span class="brand-mark">$</span>
+          <span>{{ site.title }}</span>
+        </a>
+        <div class="topbar-actions">
+          <a class="topbar-link" href="https://github.com/{{ site.repository }}">GitHub</a>
+          <button class="menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false">目录</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="site-shell">
+      <aside class="sidebar" id="site-nav">
+        <div class="sidebar-heading">学习路径</div>
+        <nav aria-label="模块导航">
+          <a class="nav-home" href="{{ '/' | relative_url }}">总览</a>
+          {% for module in site.data.modules %}
+            <a class="nav-module{% if page.url == module.url %} is-active{% endif %}" href="{{ module.url | relative_url }}">
+              <span class="nav-number">{{ module.number }}</span>
+              <span>{{ module.short_title }}</span>
+            </a>
+          {% endfor %}
+        </nav>
+        <div class="sidebar-note">仅限自有或明确授权的实验环境</div>
+      </aside>
+
+      <main class="main-content">
+        <article class="prose">
+          {{ content }}
+        </article>
+        <footer class="site-footer">
+          <span>{{ site.title }}</span>
+          <a href="https://github.com/{{ site.repository }}">查看源代码</a>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      (() => {
+        const toggle = document.querySelector('.menu-toggle');
+        const nav = document.querySelector('.sidebar');
+        if (!toggle || !nav) return;
+        toggle.addEventListener('click', () => {
+          const open = nav.classList.toggle('is-open');
+          toggle.setAttribute('aria-expanded', String(open));
+        });
+      })();
+    </script>
+  </body>
+</html>

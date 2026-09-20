@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 12：服务的使用与滥用
+description: 管理 Apache、SSH、MySQL 等常见服务。
+permalink: /Module_12_Using_Abusing_Services.html
+---
+
 # 黑客 Linux 基础
 ## 模块 12：服务的使用与滥用
 

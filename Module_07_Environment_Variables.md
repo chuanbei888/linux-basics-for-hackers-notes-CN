@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 7：环境变量
+description: 理解 PATH、Shell 配置和会话环境。
+permalink: /Module_07_Environment_Variables.html
+---
+
 # 黑客 Linux 基础
 ## 模块 7：环境变量
 

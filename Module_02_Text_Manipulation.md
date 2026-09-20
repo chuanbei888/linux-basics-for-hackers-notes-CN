@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 2：文本处理
+description: 使用 grep、sed、管道等工具筛选和处理文本。
+permalink: /Module_02_Text_Manipulation.html
+---
+
 # 黑客 Linux 基础
 ## 模块 2：文本处理
 

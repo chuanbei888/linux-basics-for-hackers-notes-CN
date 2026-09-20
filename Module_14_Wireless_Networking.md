@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 14：无线网络
+description: 在授权环境中检查 Wi-Fi 与 Bluetooth 网络。
+permalink: /Module_14_Wireless_Networking.html
+---
+
 # 黑客 Linux 基础
 ## 模块 14：无线网络
 

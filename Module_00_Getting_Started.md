@@ -1,3 +1,10 @@
+---
+layout: default
+title: 模块 0：开始学习与搭建实验环境
+description: 使用 VirtualBox 搭建 Kali Linux 安全实验环境。
+permalink: /Module_00_Getting_Started.html
+---
+
 # 黑客 Linux 基础
 ## 模块 0：开始学习与搭建实验环境
 
